@@ -1,0 +1,32 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# Git and editor metadata
+.git/
+.gitignore
+.github/
+.vs/
+.vscode/
+.idea/
+
+# Tests and local-only files
+tests/
+*.user
+*.suo
+**/TestResults/
+**/coverage/
+*.log
+
+# Documentation not needed at runtime
+docs/
+README.md
+AGENTS.md
+
+# Local environment files
+.env
+.env.*
+deploy/.env
+**/appsettings.Local.json

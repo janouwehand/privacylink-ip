@@ -1,0 +1,23 @@
+# PrivacyLink IP - Caddy integration template.
+#
+# This is NOT the final VPS edge configuration. It is an integration example
+# to be merged into the existing Caddy instance without touching the main
+# PrivacyLink routes. Adapt the upstream service name and network.
+#
+# DNS requirements:
+#   ip.privacylink.nl    A + AAAA
+#   v4.ip.privacylink.nl A only (never publish AAAA)
+#   v6.ip.privacylink.nl AAAA only (never publish A)
+#
+# Do NOT add per-family "bind" directives to the shared 443 listener. DNS
+# selects the address family before HTTP is involved.
+#
+# Privacy: do not add a "log" directive for these hostnames. If the existing
+# edge already logs access requests, exclude these hostnames or configure
+# aggregated, non-identifying logging. Visitor IPs must not be persisted in
+# access logs.
+
+ip.privacylink.nl, v4.ip.privacylink.nl, v6.ip.privacylink.nl {
+	encode zstd gzip
+	reverse_proxy privacylink-ip:8080
+}

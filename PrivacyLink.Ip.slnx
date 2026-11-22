@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/PrivacyLink.Ip/PrivacyLink.Ip.csproj" />
+  <Project Path="tests/PrivacyLink.Ip.Tests/PrivacyLink.Ip.Tests.csproj" />
+</Solution>

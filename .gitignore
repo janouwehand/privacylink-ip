@@ -1,0 +1,37 @@
+# Build output
+bin/
+obj/
+out/
+publish/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test results and coverage
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Local configuration and secrets
+appsettings.Local.json
+*.local.json
+.env
+.env.*
+!.env.example
+
+# Docker / deployment scratch output
+deploy/.env
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

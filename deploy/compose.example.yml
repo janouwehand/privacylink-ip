@@ -1,0 +1,71 @@
+# PrivacyLink IP - example Docker Compose service.
+#
+# Integration template only. Adapt to the existing VPS edge deployment.
+# The app has NO public port mapping: Caddy reaches it over an internal
+# Docker network. Replace every value in angle brackets before use.
+#
+# Required placeholders:
+#   <TRUSTED_PROXY_SUBNET>  Docker network/subnet containing Caddy, for example
+#                           172.20.0.0/16. Never trust 0.0.0.0/0 or all networks.
+#   <EDGE_NETWORK>          External Docker network shared with Caddy.
+#
+# Start with:
+#   docker compose -f compose.example.yml up -d --build
+
+services:
+  privacylink-ip:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: ${PRIVACYLINK_IP_IMAGE:-privacylink-ip:local}
+    container_name: privacylink-ip
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+
+      # Exact hostname allowlist. Override in production if needed.
+      Hosts__Main: ip.privacylink.nl
+      Hosts__V4: v4.ip.privacylink.nl
+      Hosts__V6: v6.ip.privacylink.nl
+
+      # The canonical browser origin allowed to read v4/v6 API responses.
+      Cors__AllowedOrigin: https://ip.privacylink.nl
+
+      # Trust ONLY the Caddy proxy network. The fail-closed resolver refuses
+      # private/loopback addresses, so a missing value produces 503 instead of
+      # leaking the internal container IP.
+      ForwardedHeaders__KnownNetworks__0: "${TRUSTED_PROXY_SUBNET:?set TRUSTED_PROXY_SUBNET to the Caddy network CIDR}"
+
+    # No "ports:" mapping on purpose: the backend must not be reachable
+    # directly from the internet.
+    expose:
+      - "8080"
+
+    networks:
+      - edge
+
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+
+    # Optional resource limits; adjust to VPS capacity.
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M
+
+networks:
+  edge:
+    external: true
+    name: ${EDGE_NETWORK:-privacylink-edge}

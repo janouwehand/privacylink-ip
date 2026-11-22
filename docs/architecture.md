@@ -1,0 +1,131 @@
+# Architecture
+
+## Overview
+
+PrivacyLink IP is one small ASP.NET Core process behind the existing Caddy edge
+proxy. It has no database, no external API calls and no shared code or
+deployment coupling with the main PrivacyLink application.
+
+```text
+Browser / curl
+      |
+      | IPv4 or IPv6, port 80/443
+      v
+Caddy (public edge, TLS, HTTP/2/3)
+      |
+      | internal Docker network, trusted X-Forwarded-For / X-Forwarded-Proto
+      v
+privacylink-ip:8080 (ASP.NET Core, non-root, no public port)
+      |
+      +-- server-rendered HTML (initial IP)
+      +-- /api/ip        text/plain
+      +-- /api/ip.json   JSON
+      +-- /healthz
+```
+
+The three public hostnames share one Caddy instance and one app container. DNS,
+not an application path, selects the address family:
+
+| Hostname | DNS | Role |
+| --- | --- | --- |
+| `ip.privacylink.nl` | A + AAAA | Homepage and dual-stack API |
+| `v4.ip.privacylink.nl` | A only | IPv4-only detection |
+| `v6.ip.privacylink.nl` | AAAA only | IPv6-only detection |
+
+## Request pipeline
+
+The pipeline order is security-relevant:
+
+1. **Forwarded headers.** `UseForwardedHeaders` runs early and processes
+   `X-Forwarded-For`/`X-Forwarded-Proto` only from explicitly configured proxy
+   IPs or CIDRs. No blind first-header fallback exists.
+2. **Exception handler.** Unhandled exceptions become a neutral `500` response
+   without stack traces, request IPs or internal details.
+3. **Security headers.** `X-Content-Type-Options: nosniff`, `Referrer-Policy:
+   no-referrer`, `Permissions-Policy`, CSP and HSTS (HTTPS only).
+4. **HTTPS redirect.** Outside Development, HTTP requests for allowed hostnames
+   receive a `308` to HTTPS. Unknown hosts are never used as redirect targets.
+5. **Static files.** `Web/` is served from the content root. `/index.html` is
+   rewritten to `/` so the template instead of the raw file is served. Assets
+   under `/assets/` are cached for one hour; other static pages for five
+   minutes. (Asset filenames are not content-hashed, so no long immutable
+   caching is used.)
+6. **Endpoints.** `/`, `/api/ip`, `/api/ip.json`, `/healthz`.
+
+## IP resolution and fail-closed behavior
+
+`ClientIpResolver` reads `HttpContext.Connection.RemoteIpAddress` after the
+forwarded-header middleware. It normalizes IPv4-mapped IPv6 addresses
+(`::ffff:192.0.2.1` → `192.0.2.1`) and formats addresses with standard .NET
+formatting (compact IPv6, no port, no brackets).
+
+The resolver rejects loopback, private (RFC 1918), link-local, CGNAT, unique
+local, multicast and unspecified addresses. This is intentional: if the
+forwarded-header configuration is missing, ASP.NET Core ignores headers from
+unconfigured proxies and leaves the direct peer address visible — normally the
+internal Caddy/container IP. Returning that address would be a correctness and
+privacy bug. Instead the service logs a non-identifying reason and returns a
+neutral `503`.
+
+This means local development on plain `localhost` fails closed too. See the
+README for a safe local simulation using a trusted loopback proxy.
+
+## Host allowlist and family gating
+
+`HostAllowlist` compares the normalized `Host` header exactly against the
+configured main, v4 and v6 hostnames. No suffix match is used, so
+`v4.ip.privacylink.nl.evil.example` is rejected. Unknown hosts receive `400`.
+
+On `v4.*` only an IPv4 observation is valid, and on `v6.*` only IPv6. Any
+mismatch returns `503 ip_family_mismatch` and logs a non-identifying event. The
+API never returns a `200` with the wrong family.
+
+## Server-side rendering
+
+The homepage is a static template read from `Web/index.html` at request time.
+`SiteRenderer.RenderHtml(template, IpState)` performs exactly three replacements:
+
+| Placeholder | Value |
+| --- | --- |
+| `{{INITIAL_IPV4}}` | HTML-encoded IPv4, or empty when the initial family is IPv6 |
+| `{{INITIAL_IPV6}}` | HTML-encoded IPv6, or empty when the initial family is IPv4 |
+| `{{SERVER_STATE}}` | JSON `{"initialIp":"...","initialVersion":4|6,"otherVersion":6|4}` |
+
+IP values are encoded with `HtmlEncoder.Default`. The JSON block is serialized
+with `System.Text.Json`; the default encoder escapes HTML-sensitive characters,
+so the model cannot break out of a `<script type="application/json">` block.
+The renderer is a standalone class so unit tests use inline templates and do not
+depend on frontend files.
+
+## Caching and cross-origin behavior
+
+- Every IP-bearing response (homepage, `/api/ip`, `/api/ip.json`) has
+  `Cache-Control: no-store`, no `ETag` and no `Last-Modified`.
+- `v4.*` and `v6.*` API responses include
+  `Access-Control-Allow-Origin: https://ip.privacylink.nl` exactly. No wildcard
+  and no credentials header. CORS is not authentication; CLI access remains open.
+- Static, non-IP assets may be cached.
+
+## Security headers
+
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: no-referrer`
+- `Permissions-Policy` disables camera, geolocation, microphone and similar
+  capabilities.
+- CSP allows only same-origin scripts/styles and `connect-src` to the canonical
+  origin plus the two family hostnames. No inline scripts and no third parties.
+- HSTS is per hostname with `max-age=31536000`, without `includeSubDomains` or
+  `preload`.
+
+## Failure handling
+
+| Condition | Behavior |
+| --- | --- |
+| Missing/private/untrusted client address | `503 ip_unavailable`, warning without IP |
+| Family mismatch | `503 ip_family_mismatch`, warning without IP |
+| Unknown Host | `400 invalid_host` |
+| Missing homepage template | `404 homepage_not_available` |
+| Unexpected exception | `500 internal_error` |
+
+Operational logs intentionally exclude visitor IPs. Aggregate status/latency
+metrics are acceptable; individual request logs with full client IPs are not.

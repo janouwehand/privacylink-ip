@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <RootNamespace>PrivacyLink.Ip</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Web assets are owned by the frontend task. The glob may legitimately
+         match nothing while the frontend files do not exist yet. C# sources
+         that happen to live under Web/ are excluded from the content copy. -->
+    <Content Include="Web/**" Exclude="Web/**/*.cs" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
