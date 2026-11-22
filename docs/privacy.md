@@ -81,7 +81,7 @@ the same privacy rules.
 
 - Contact: `<PRIVACY_CONTACT>` (set by the operator; do not invent an address
   in this repository).
-- Source code: `<SOURCE_REPOSITORY_URL>`.
+- Source code: <https://github.com/janouwehand/privacylink-ip>.
 
 ## Changes
 

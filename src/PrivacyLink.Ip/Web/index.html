@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PrivacyLink IP — your public IP address</title>
   <meta name="description" content="See the public IPv4 and IPv6 addresses this server observes for your connection. Copy either one. No ads, no tracking, nothing stored.">
-  <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
   <link rel="stylesheet" href="/assets/site.css">
   <script type="application/json" id="ip-server-state">{{SERVER_STATE}}</script>
   <script src="/assets/site.js" defer></script>
@@ -18,23 +17,30 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="/">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span>PrivacyLink<span class="brand-dim"> IP</span></span>
+        <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" aria-hidden="true" focusable="false">
+          <g transform="rotate(-45 20 20)" stroke-width="3.5">
+            <rect x="3.5" y="14" width="20" height="12" rx="6" stroke="#16333A"></rect>
+            <rect x="16.5" y="14" width="20" height="12" rx="6" stroke="#4A9B8D"></rect>
+          </g>
+        </svg>
+        <span class="brand-name">PrivacyLink<span class="brand-suffix"> IP</span></span>
       </a>
       <p class="claim"><span class="claim-dot" aria-hidden="true"></span>No ads. No tracking.</p>
     </div>
   </header>
 
   <main id="main" class="wrap">
-    <h1 class="sr-only">Your public IP address</h1>
-
-    <p class="lead">The public addresses this server sees for your connection. Copy what you need — nothing is stored.</p>
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Your connection</p>
+      <h1 id="page-title">Your public IP, <span class="hero-accent">as the world sees it</span></h1>
+      <p class="hero-sub">The IPv4 and IPv6 addresses this server observes for your connection. Copy either one — nothing is stored.</p>
+    </section>
+    <div class="hero-rule" aria-hidden="true"></div>
 
     <div class="ip-stack">
       <section class="ip-row" data-family="4" data-status="unknown" aria-labelledby="ipv4-label">
         <div class="ip-row__head">
-          <span class="ip-row__idx" aria-hidden="true">01</span>
-          <h2 class="ip-row__label" id="ipv4-label">Your public IPv4</h2>
+          <h2 class="ip-row__label" id="ipv4-label">01 · Your public IPv4</h2>
         </div>
         <div class="ip-row__body">
           <output id="ipv4-value" class="ip-value" aria-live="off">{{INITIAL_IPV4}}</output>
@@ -53,8 +59,7 @@
 
       <section class="ip-row" data-family="6" data-status="unknown" aria-labelledby="ipv6-label">
         <div class="ip-row__head">
-          <span class="ip-row__idx" aria-hidden="true">02</span>
-          <h2 class="ip-row__label" id="ipv6-label">Your public IPv6</h2>
+          <h2 class="ip-row__label" id="ipv6-label">02 · Your public IPv6</h2>
         </div>
         <div class="ip-row__body">
           <output id="ipv6-value" class="ip-value" aria-live="off">{{INITIAL_IPV6}}</output>
@@ -93,7 +98,6 @@
         <h2 id="about-title">About</h2>
         <p>PrivacyLink IP is a small, independent, open-source tool with one job: show the public IP addresses this server observes for your connection. No ads, no account, no analytics, no history of who connected.</p>
         <p>Both address families get their own row and their own Copy button. The address of the connection that loaded this page is part of the page itself, so it is visible before any script runs.</p>
-        <p class="muted">Source code and contact links on this site are placeholders until the public repository is announced.</p>
       </section>
 
       <section class="block" id="api" aria-labelledby="api-title">
@@ -109,11 +113,7 @@ curl -s https://ip.privacylink.nl/api/ip.json</code></pre>
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <nav class="footer-nav" aria-label="Site">
-        <a href="#about">About</a>
-        <a href="/privacy">Privacy</a>
-        <a href="#api">API</a>
-        <!-- PLACEHOLDER: replace with the public repository URL. -->
-        <a href="https://github.com/privacylink/privacylink-ip" rel="noopener noreferrer" target="_blank">Source code<span class="sr-only"> (opens in a new tab)</span></a>
+        <a href="https://github.com/janouwehand/privacylink-ip" rel="noopener noreferrer" target="_blank">GitHub<span class="sr-only"> (opens in a new tab)</span></a>
       </nav>
       <p class="footer-note">PrivacyLink IP · no ads, no tracking</p>
     </div>
