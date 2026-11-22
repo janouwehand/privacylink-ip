@@ -82,9 +82,17 @@ curl -sS http://localhost:5000/api/ip \
 
 ## API
 
-All endpoints support `GET` and `HEAD`; other methods return `405`.
+The full, copyable documentation — including cURL, PowerShell, JavaScript,
+Python and wget examples — is served at
+<https://ip.privacylink.nl/api>.
+
+All API endpoints support `GET` and `HEAD`; other methods return `405`.
 Responses that contain or derive from the visitor IP use `Cache-Control:
 no-store` and do not emit `ETag`/`Last-Modified`.
+
+The hostname selects the address family; a URL path cannot. The main hostname
+returns the family of the specific connection, `v4.*` returns IPv4 only via DNS
+and `v6.*` returns IPv6 only via DNS.
 
 ### `GET /api/ip`
 
@@ -134,14 +142,14 @@ Error responses never echo the client IP, request headers or stack traces.
 # Dual-stack: the family of the connection curl chooses
 curl -sS https://ip.privacylink.nl/api/ip
 
+# JSON
+curl -sS https://ip.privacylink.nl/api/ip.json
+
 # Force an IPv4 path via DNS
 curl -sS https://v4.ip.privacylink.nl/api/ip
 
 # Force an IPv6 path via DNS
 curl -sS https://v6.ip.privacylink.nl/api/ip
-
-# JSON
-curl -sS https://v4.ip.privacylink.nl/api/ip.json
 
 # Explicit network protocol for the main hostname
 curl -4 -sS https://ip.privacylink.nl/api/ip
@@ -149,6 +157,29 @@ curl -6 -sS https://ip.privacylink.nl/api/ip
 ```
 
 `curl -6` fails on clients without usable IPv6 connectivity.
+
+On Windows PowerShell 5.1, `curl` is an alias for `Invoke-WebRequest` and does
+not accept Unix flags such as `-s`. Use `curl.exe` or the PowerShell equivalent:
+
+```powershell
+Invoke-RestMethod https://ip.privacylink.nl/api/ip
+Invoke-RestMethod https://ip.privacylink.nl/api/ip.json
+```
+
+## Caching
+
+- IP-bearing responses (homepage, `/api/ip`, `/api/ip.json`) are never stored:
+  `Cache-Control: no-store`, without `ETag` or `Last-Modified`.
+- `/api` contains no visitor data and uses `Cache-Control: public, no-cache`
+  plus a weak `ETag`. Browsers revalidate, so documentation changes appear
+  immediately and unchanged pages cost only a `304`.
+- `/assets/*` URLs include a content hash (`?v=...`). The current URL is cached
+  for one year as `immutable`; unversioned or stale URLs use
+  `public, no-cache` and `ETag` revalidation. After a deploy the HTML points at
+  the new asset URLs, so users do not keep stale CSS or JS.
+- When adding an asset, reference it in the HTML templates through
+  `{{ASSET_CSS_URL}}` / `{{ASSET_JS_URL}}` (or extend `AssetManifest`) instead
+  of hardcoding its path.
 
 ## Configuration
 
@@ -207,6 +238,7 @@ depend on the separate frontend files.
 - [Deployment and operations](docs/deployment.md)
 - [Privacy](docs/privacy.md)
 - [ADR 0001: forwarded headers](docs/adr/0001-forwarded-headers.md)
+- [ADR 0002: API documentation page](docs/adr/0002-api-documentation-page.md)
 
 ## Placeholders and production specifics
 

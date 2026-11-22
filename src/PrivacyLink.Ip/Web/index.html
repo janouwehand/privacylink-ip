@@ -7,9 +7,9 @@
   <meta name="description" content="See the public IPv4 and IPv6 addresses this server observes for your connection. Copy either one. No ads, no tracking, nothing stored.">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#ffffff">
-  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="{{ASSET_CSS_URL}}">
   <script type="application/json" id="ip-server-state">{{SERVER_STATE}}</script>
-  <script src="/assets/site.js" defer></script>
+  <script src="{{ASSET_JS_URL}}" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -102,10 +102,10 @@
 
       <section class="block" id="api" aria-labelledby="api-title">
         <h2 id="api-title">API</h2>
-        <p>The same answer without a browser: plain text, no cookies, no key.</p>
-        <pre class="snippet"><code>curl -s https://ip.privacylink.nl/api/ip
-curl -s https://ip.privacylink.nl/api/ip.json</code></pre>
-        <p class="muted">The JSON endpoint returns <code>{"ip":"…","version":4}</code>. To force a family, use the <code>v4.</code> or <code>v6.</code> hostname — DNS selects the protocol, a URL path cannot.</p>
+        <p>The same answer without a browser: plain text or JSON, no cookies, no key.</p>
+        <pre class="snippet"><code>curl -sS https://ip.privacylink.nl/api/ip</code></pre>
+        <p>This hostname answers with whichever family your connection uses. For IPv4 only use <code>https://v4.ip.privacylink.nl/api/ip</code>; for IPv6 only use <code>https://v6.ip.privacylink.nl/api/ip</code>.</p>
+        <p class="block-link"><a href="/api">Full API documentation <span aria-hidden="true">→</span></a></p>
       </section>
     </div>
   </main>
@@ -113,6 +113,7 @@ curl -s https://ip.privacylink.nl/api/ip.json</code></pre>
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <nav class="footer-nav" aria-label="Site">
+        <a href="/api">API</a>
         <a href="https://github.com/janouwehand/privacylink-ip" rel="noopener noreferrer" target="_blank">GitHub<span class="sr-only"> (opens in a new tab)</span></a>
       </nav>
       <p class="footer-note">PrivacyLink IP · no ads, no tracking</p>

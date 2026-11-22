@@ -1,4 +1,6 @@
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.FileProviders;
@@ -12,6 +14,11 @@ var configuration = builder.Configuration;
 builder.Services.AddSingleton<ClientIpResolver>();
 builder.Services.AddSingleton<HostAllowlist>();
 builder.Services.AddSingleton<SiteRenderer>();
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var environment = serviceProvider.GetRequiredService<IHostEnvironment>();
+    return new AssetManifest(Path.Combine(environment.ContentRootPath, "Web", "assets"));
+});
 
 builder.Services.Configure<ForwardedHeadersOptions>(options => ConfigureForwardedHeaders(options, configuration));
 
@@ -20,6 +27,7 @@ var app = builder.Build();
 var resolver = app.Services.GetRequiredService<ClientIpResolver>();
 var hosts = app.Services.GetRequiredService<HostAllowlist>();
 var renderer = app.Services.GetRequiredService<SiteRenderer>();
+var assets = app.Services.GetRequiredService<AssetManifest>();
 
 var allowedOrigin = configuration["Cors:AllowedOrigin"] ?? "https://ip.privacylink.nl";
 var csp = string.Join(
@@ -96,12 +104,17 @@ if (configuration.GetValue("Https:Redirect", true) && hasTrustedProxyConfigurati
 }
 
 // /index.html is rendered by the homepage endpoint (placeholders must be
-// replaced), never served as a raw static file.
+// replaced), never served as a raw static file. /api.html is rewritten to the
+// API documentation endpoint for the same reason.
 app.Use((context, next) =>
 {
     if (context.Request.Path == "/index.html")
     {
         context.Request.Path = "/";
+    }
+    else if (context.Request.Path == "/api.html")
+    {
+        context.Request.Path = "/api";
     }
 
     return next();
@@ -116,12 +129,16 @@ if (Directory.Exists(webRoot))
         FileProvider = webProvider,
         OnPrepareResponse = staticFileContext =>
         {
-            var path = staticFileContext.Context.Request.Path.Value ?? string.Empty;
-            // Asset filenames are not content-hashed, so use a modest cache
-            // lifetime rather than a one-year immutable cache.
-            staticFileContext.Context.Response.Headers.CacheControl = path.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase)
-                ? "public, max-age=3600"
-                : "public, max-age=300";
+            var context = staticFileContext.Context;
+            var path = context.Request.Path.Value ?? string.Empty;
+            var version = context.Request.Query["v"].ToString();
+
+            // Only the current content-hashed URL may be cached immutably.
+            // Stale or unversioned URLs must revalidate, so a deploy is visible
+            // immediately instead of after a max-age window.
+            context.Response.Headers.CacheControl = assets.IsCurrentVersion(path, version)
+                ? "public, max-age=31536000, immutable"
+                : "public, no-cache";
         }
     });
 }
@@ -131,6 +148,10 @@ app.MapMethods("/healthz", ["GET", "HEAD"], HandleHealth);
 app.MapMethods("/api/ip", ["GET", "HEAD"], HandleIpPlain);
 
 app.MapMethods("/api/ip.json", ["GET", "HEAD"], HandleIpJson);
+
+app.MapMethods("/api", ["GET", "HEAD"], HandleApiDocs);
+
+app.MapMethods("/api.html", ["GET", "HEAD"], HandleApiDocs);
 
 app.MapMethods("/", ["GET", "HEAD"], HandleHomepage);
 
@@ -227,6 +248,40 @@ async Task HandleIpAsync(HttpContext context, bool json)
     }
 }
 
+async Task HandleApiDocs(HttpContext context)
+{
+    // The page contains no visitor-specific data, so it is cacheable and does
+    // not need client IP resolution or IP-family gating. Unknown Host headers
+    // are already rejected by the global allowlist middleware.
+    var templatePath = Path.Combine(app.Environment.ContentRootPath, "Web", "api.html");
+    if (!File.Exists(templatePath))
+    {
+        app.Logger.LogWarning("API documentation template is missing");
+        await WriteErrorAsync(context, StatusCodes.Status404NotFound, "api_docs_not_available", json: false);
+        return;
+    }
+
+    var template = await File.ReadAllTextAsync(templatePath, context.RequestAborted);
+    var html = renderer.RenderDocs(template, hosts.Main, hosts.V4, hosts.V6, assets);
+    var entityTag = CreateWeakEntityTag(html);
+
+    context.Response.StatusCode = StatusCodes.Status200OK;
+    context.Response.ContentType = "text/html; charset=utf-8";
+    context.Response.Headers.CacheControl = "public, no-cache";
+    context.Response.Headers.ETag = entityTag;
+
+    if (MatchesEntityTag(context.Request.Headers.IfNoneMatch.ToString(), entityTag))
+    {
+        context.Response.StatusCode = StatusCodes.Status304NotModified;
+        return;
+    }
+
+    if (!HttpMethods.IsHead(context.Request.Method))
+    {
+        await context.Response.WriteAsync(html, context.RequestAborted);
+    }
+}
+
 async Task HandleHomepage(HttpContext context)
 {
     var hostKind = hosts.Classify(context.Request.Host.Host);
@@ -264,7 +319,7 @@ async Task HandleHomepage(HttpContext context)
 
     var template = await File.ReadAllTextAsync(templatePath, context.RequestAborted);
     var model = new IpState(address.ToString(), version, version == 4 ? 6 : 4);
-    var html = renderer.RenderHtml(template, model);
+    var html = renderer.RenderHtml(template, model, assets);
 
     context.Response.StatusCode = StatusCodes.Status200OK;
     context.Response.ContentType = "text/html; charset=utf-8";
@@ -289,6 +344,31 @@ void NoStore(HttpContext context)
     context.Response.Headers.CacheControl = "no-store";
     context.Response.Headers.Remove("ETag");
     context.Response.Headers.Remove("Last-Modified");
+}
+
+// Cache validators are weak because a shared/edge cache may re-encode the body.
+static string CreateWeakEntityTag(string content)
+{
+    var hash = SHA256.HashData(Encoding.UTF8.GetBytes(content));
+    return $"W/\"{Convert.ToHexString(hash.AsSpan(0, 8)).ToLowerInvariant()}\"";
+}
+
+static bool MatchesEntityTag(string ifNoneMatch, string entityTag)
+{
+    if (string.IsNullOrEmpty(ifNoneMatch))
+    {
+        return false;
+    }
+
+    foreach (var candidate in ifNoneMatch.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+    {
+        if (candidate == "*" || string.Equals(candidate, entityTag, StringComparison.Ordinal))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 async Task WriteErrorAsync(HttpContext context, int statusCode, string errorCode, bool json)

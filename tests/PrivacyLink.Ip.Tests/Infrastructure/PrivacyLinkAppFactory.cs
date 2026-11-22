@@ -82,7 +82,8 @@ public static class Requests
         string? remoteIp = null,
         string? forwardedFor = null,
         string? origin = null,
-        string method = "GET")
+        string method = "GET",
+        string? ifNoneMatch = null)
     {
         var request = new HttpRequestMessage(new HttpMethod(method), path);
         request.Headers.Host = host;
@@ -100,6 +101,11 @@ public static class Requests
         if (origin is not null)
         {
             request.Headers.TryAddWithoutValidation("Origin", origin);
+        }
+
+        if (ifNoneMatch is not null)
+        {
+            request.Headers.TryAddWithoutValidation("If-None-Match", ifNoneMatch);
         }
 
         return client.SendAsync(request);

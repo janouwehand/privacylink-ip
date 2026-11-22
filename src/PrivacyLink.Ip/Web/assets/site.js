@@ -33,6 +33,9 @@
 
   function announce(message) {
     if (!announcer) {
+      announcer = document.getElementById("announcer");
+    }
+    if (!announcer) {
       return;
     }
     window.clearTimeout(announceTimer);
@@ -103,7 +106,7 @@
     if (!button) {
       return;
     }
-    var span = button.querySelector(".btn__label");
+    var span = button.querySelector(".btn__label, .copy__label");
     if (span) {
       span.textContent = text;
     } else {
@@ -437,12 +440,190 @@
     });
   }
 
+  function initTabs() {
+    var groups = document.querySelectorAll("[data-tabs]");
+
+    Array.prototype.forEach.call(groups, function (group) {
+      var list = group.querySelector('[role="tablist"]');
+      if (!list) {
+        return;
+      }
+
+      var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+      if (!tabs.length) {
+        return;
+      }
+
+      var panels = {};
+      var complete = true;
+
+      tabs.forEach(function (tab) {
+        var controlled = tab.getAttribute("aria-controls");
+        var panel = controlled ? document.getElementById(controlled) : null;
+        if (!panel) {
+          complete = false;
+        } else {
+          panels[tab.id] = panel;
+        }
+      });
+
+      if (!complete) {
+        return;
+      }
+
+      var vertical = list.getAttribute("aria-orientation") === "vertical";
+
+      function select(tab, focus, updateHash) {
+        tabs.forEach(function (other) {
+          var active = other === tab;
+          other.setAttribute("aria-selected", active ? "true" : "false");
+          other.tabIndex = active ? 0 : -1;
+          panels[other.id].hidden = !active;
+        });
+
+        if (focus) {
+          tab.focus();
+        }
+
+        if (updateHash) {
+          var hash = "#" + tab.id;
+          try {
+            if (window.location.hash !== hash) {
+              window.history.replaceState(null, "", hash);
+            }
+          } catch (error) {
+            /* A history API that refuses the update must not break the tabs. */
+          }
+        }
+      }
+
+      function tabFromHash() {
+        var id = window.location.hash.replace(/^#/, "");
+        if (!id) {
+          return null;
+        }
+        for (var i = 0; i < tabs.length; i += 1) {
+          if (tabs[i].id === id) {
+            return tabs[i];
+          }
+        }
+        return null;
+      }
+
+      var initial = tabFromHash();
+      if (!initial) {
+        initial = tabs.filter(function (tab) {
+          return tab.getAttribute("aria-selected") === "true";
+        })[0] || tabs[0];
+      }
+
+      select(initial, false, false);
+
+      list.addEventListener("click", function (event) {
+        var tab = event.target.closest ? event.target.closest('[role="tab"]') : null;
+        if (!tab || tabs.indexOf(tab) === -1) {
+          return;
+        }
+        select(tab, false, true);
+      });
+
+      list.addEventListener("keydown", function (event) {
+        var current = tabs.indexOf(document.activeElement);
+        if (current === -1) {
+          return;
+        }
+
+        var next = -1;
+        if ((!vertical && event.key === "ArrowRight") || (vertical && event.key === "ArrowDown")) {
+          next = (current + 1) % tabs.length;
+        } else if ((!vertical && event.key === "ArrowLeft") || (vertical && event.key === "ArrowUp")) {
+          next = (current - 1 + tabs.length) % tabs.length;
+        } else if (event.key === "Home") {
+          next = 0;
+        } else if (event.key === "End") {
+          next = tabs.length - 1;
+        }
+
+        if (next === -1) {
+          return;
+        }
+
+        event.preventDefault();
+        select(tabs[next], true, true);
+      });
+    });
+  }
+
+  function snippetTarget(button) {
+    var selector = button.getAttribute("data-copy-snippet");
+
+    if (selector && selector !== "true") {
+      try {
+        var found = document.querySelector(selector);
+        if (found) {
+          return found.tagName === "CODE" ? found : found.querySelector("code");
+        }
+      } catch (error) {
+        /* Invalid selector: fall back to the nearest card. */
+      }
+    }
+
+    var card = button.closest ? button.closest(".codecard") : null;
+    if (card) {
+      return card.querySelector("pre code") || card.querySelector("code");
+    }
+
+    return null;
+  }
+
+  function initSnippetCopy() {
+    var buttons = document.querySelectorAll("[data-copy-snippet]");
+
+    Array.prototype.forEach.call(buttons, function (button) {
+      var timer = 0;
+
+      button.addEventListener("click", function () {
+        var target = snippetTarget(button);
+        if (!target) {
+          return;
+        }
+
+        var value = (target.textContent || "").replace(/\s+$/, "");
+        if (!value) {
+          return;
+        }
+
+        copyText(value).then(function () {
+          window.clearTimeout(timer);
+          button.classList.add("is-copied");
+          setCopyLabel(button, "Copied");
+          timer = window.setTimeout(function () {
+            button.classList.remove("is-copied");
+            setCopyLabel(button, "Copy");
+          }, COPY_RESET_MS);
+          announce("Example copied.");
+        }).catch(function () {
+          window.clearTimeout(timer);
+          setCopyLabel(button, "Copy failed");
+          timer = window.setTimeout(function () {
+            setCopyLabel(button, "Copy");
+          }, COPY_RESET_MS + 700);
+          selectValue(target);
+          announce("Copy failed. The example is selected, so you can copy it with your keyboard.");
+        });
+      });
+    });
+  }
+
   function init() {
+    announcer = document.getElementById("announcer");
+
+    initTabs();
+    initSnippetCopy();
+
     if (!document.querySelector(".ip-row")) {
       return;
     }
-
-    announcer = document.getElementById("announcer");
 
     var server = readServerState();
     var initialFamily = 0;
