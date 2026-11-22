@@ -99,5 +99,7 @@ sudo /usr/local/sbin/privacylink-ip-deploy ghcr.io/janouwehand/privacylink-ip@sh
 ```
 
 The helper removes unused images after a healthy deployment, so an older digest
-may need to be pulled again from GHCR; keep a practical number of package
-versions in the registry.
+may need to be pulled again from GHCR. The `Clean up container package versions`
+workflow keeps the newest `sha-*` versions (default 10) and every release-tagged
+version in the registry; raise `keep_sha_versions` before relying on an older
+digest for a delayed rollback.

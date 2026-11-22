@@ -179,6 +179,12 @@ Images are immutable and deployments use digests. To roll back:
 Never move or overwrite an existing version tag. The helper prunes unused images
 after a healthy deployment, so a rollback may need to pull the old digest again.
 
+Registry retention is handled by `.github/workflows/cleanup-packages.yml`: it
+runs weekly, deletes `sha-*`-only versions beyond the newest ten, and never
+touches release-tagged versions. Manual runs default to a dry run. If a rollback
+must stay available beyond that window, tag the digest with a `v*` tag or raise
+`keep_sha_versions`.
+
 ## 9. Operational checklist
 
 - [ ] DNS A/AAAA split verified; no unwanted AAAA on v4, no A on v6.
