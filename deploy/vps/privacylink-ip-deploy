@@ -29,8 +29,17 @@ compose=(docker compose --project-name privacylink-ip --file "$compose_file")
 "${compose[@]}" pull privacylink-ip
 "${compose[@]}" up --no-build --detach --wait --wait-timeout 120 --force-recreate privacylink-ip
 
+# The app redirects plain HTTP on a known hostname to HTTPS (308), so a bare
+# curl check would treat the redirect as success. Requests from this host arrive
+# through the stack network gateway, which is the trusted proxy, so asserting
+# X-Forwarded-Proto gives the real 200 readiness answer instead of a redirect.
 for attempt in {1..30}; do
-  if curl --fail --silent --show-error --max-time 5 -H 'Host: ip.privacylink.nl' "$health_url" >/dev/null; then
+  code=$(curl --silent --show-error --max-time 5 --output /dev/null \
+    --write-out '%{http_code}' \
+    -H 'Host: ip.privacylink.nl' \
+    -H 'X-Forwarded-Proto: https' \
+    "$health_url" || true)
+  if [[ "$code" == '200' ]]; then
     docker image prune --all --force --filter 'label=org.opencontainers.image.source=https://github.com/janouwehand/privacylink-ip'
     echo "Deployment ready: privacylink-ip ($image)"
     exit 0
