@@ -12,6 +12,11 @@ name: Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_only:
+        description: "Build and push the image without deploying (used once to create and publish the GHCR package)"
+        type: boolean
+        default: false
   push:
     tags:
       - "v*"
@@ -108,6 +113,7 @@ jobs:
   deploy:
     name: Deploy to VPS
     needs: build-image
+    if: ${{ !inputs.publish_only }}
     runs-on: ubuntu-latest
     environment: production
     steps:

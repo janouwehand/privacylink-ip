@@ -58,9 +58,11 @@ forwarded-header peer; do not widen it and do not trust `0.0.0.0/0`.
 ## 4. Make the container image pullable
 
 The VPS pulls the image by digest without registry credentials, so the GHCR
-package `privacylink-ip` must be public. Run the `Deploy` workflow once, then set
-the package visibility to public in the repository's package settings. GitHub
-does not allow reverting a public package to private.
+package `privacylink-ip` must be public. Run the `Deploy` workflow once with
+`publish_only` enabled to create the package, then set the package visibility to
+public in the repository's package settings (or with
+`gh api --method PATCH /user/packages/container/privacylink-ip -f visibility=public`).
+GitHub does not allow reverting a public package to private.
 
 ## 5. Configure GitHub
 
