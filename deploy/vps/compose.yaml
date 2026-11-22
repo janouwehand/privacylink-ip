@@ -1,0 +1,71 @@
+# PrivacyLink IP - production Compose stack for the Contabo VPS (softable.nl).
+#
+# Installed as /opt/privacylink-ip/compose.yaml (root:root, 0644). The image is
+# supplied by /usr/local/sbin/privacylink-ip-deploy as an immutable GHCR digest;
+# do not start this stack by hand with a mutable tag.
+#
+# Caddy runs on the host and proxies to the loopback-only port below. The
+# published port is therefore never reachable from the internet. The container
+# sees Caddy as the Docker network gateway 10.77.0.1, which is the only trusted
+# forwarded-header peer.
+services:
+  privacylink-ip:
+    image: "${PRIVACYLINK_IP_IMAGE:?set PRIVACYLINK_IP_IMAGE to a GHCR image digest}"
+    pull_policy: always
+    container_name: privacylink-ip
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+
+      # Exact hostname allowlist. No aliases in production.
+      Hosts__Main: ip.privacylink.nl
+      Hosts__V4: v4.ip.privacylink.nl
+      Hosts__V6: v6.ip.privacylink.nl
+      Hosts__MainAliases__0: ""
+
+      # Canonical browser origin allowed to read the v4/v6 API responses.
+      Cors__AllowedOrigin: https://ip.privacylink.nl
+
+      # Trust only this stack's own Docker network. A wrong value makes the app
+      # fail closed with 503 instead of leaking the internal container address.
+      ForwardedHeaders__KnownNetworks__0: 10.77.0.0/24
+      ForwardedHeaders__ForwardLimit: "1"
+      Https__Redirect: "true"
+
+    # Loopback-only: Caddy is the only public HTTP(S) entry point.
+    ports:
+      - target: 8080
+        published: "8082"
+        host_ip: 127.0.0.1
+        protocol: tcp
+
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+
+    networks:
+      - backend
+
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+
+networks:
+  backend:
+    name: privacylink-ip-backend
+    ipam:
+      config:
+        # Fixed on purpose: the gateway address is the trusted proxy peer.
+        - subnet: 10.77.0.0/24

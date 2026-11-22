@@ -1,0 +1,11 @@
+# PrivacyLink IP - Caddy site block.
+#
+# Installed as /etc/caddy/sites-enabled/privacylink-ip.caddy on the Contabo VPS.
+# The Caddyfile in /etc/caddy imports every file in sites-enabled.
+#
+# Do not add a log directive: visitor IPs must not be persisted in access logs.
+# Do not add per-family bind directives: DNS selects the address family.
+ip.privacylink.nl, v4.ip.privacylink.nl, v6.ip.privacylink.nl {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8082
+}

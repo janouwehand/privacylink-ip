@@ -1,13 +1,15 @@
 # PrivacyLink IP - example Docker Compose service.
 #
-# Integration template only. Adapt to the existing VPS edge deployment.
-# The app has NO public port mapping: Caddy reaches it over an internal
-# Docker network. Replace every value in angle brackets before use.
+# Integration template only. The production stack for the Contabo VPS lives in
+# deploy/vps/compose.yaml. Replace every placeholder in angle brackets before
+# use.
 #
 # Required placeholders:
-#   <TRUSTED_PROXY_SUBNET>  Docker network/subnet containing Caddy, for example
-#                           172.20.0.0/16. Never trust 0.0.0.0/0 or all networks.
-#   <EDGE_NETWORK>          External Docker network shared with Caddy.
+#   <HOST_PORT>             loopback port published for Caddy, for example 8082
+#   <TRUSTED_PROXY_SUBNET>  dedicated subnet of this stack, for example
+#                           10.77.0.0/24. Caddy reaches the app through the
+#                           Docker network gateway of that subnet. Never trust
+#                           0.0.0.0/0 or all Docker networks.
 #
 # Start with:
 #   docker compose -f compose.example.yml up -d --build
@@ -28,22 +30,28 @@ services:
       Hosts__Main: ip.privacylink.nl
       Hosts__V4: v4.ip.privacylink.nl
       Hosts__V6: v6.ip.privacylink.nl
+      Hosts__MainAliases__0: ""
 
       # The canonical browser origin allowed to read v4/v6 API responses.
       Cors__AllowedOrigin: https://ip.privacylink.nl
 
-      # Trust ONLY the Caddy proxy network. The fail-closed resolver refuses
-      # private/loopback addresses, so a missing value produces 503 instead of
-      # leaking the internal container IP.
-      ForwardedHeaders__KnownNetworks__0: "${TRUSTED_PROXY_SUBNET:?set TRUSTED_PROXY_SUBNET to the Caddy network CIDR}"
+      # Trust ONLY the gateway of this stack's own network. The fail-closed
+      # resolver refuses private/loopback addresses, so a missing value
+      # produces 503 instead of leaking the internal container IP.
+      ForwardedHeaders__KnownNetworks__0: "${TRUSTED_PROXY_SUBNET:?set TRUSTED_PROXY_SUBNET to the stack network CIDR}"
+      ForwardedHeaders__ForwardLimit: "1"
+      Https__Redirect: "true"
 
-    # No "ports:" mapping on purpose: the backend must not be reachable
-    # directly from the internet.
-    expose:
-      - "8080"
+    # Loopback only: the backend must not be reachable directly from the
+    # internet. Caddy is the only public entry point.
+    ports:
+      - target: 8080
+        published: "${HOST_PORT:?set HOST_PORT to a free loopback port}"
+        host_ip: 127.0.0.1
+        protocol: tcp
 
     networks:
-      - edge
+      - backend
 
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/healthz"]
@@ -63,9 +71,11 @@ services:
       resources:
         limits:
           cpus: "0.50"
-          memory: 128M
+          memory: 256M
 
 networks:
-  edge:
-    external: true
-    name: ${EDGE_NETWORK:-privacylink-edge}
+  backend:
+    name: ${COMPOSE_PROJECT_NAME:-privacylink-ip}-backend
+    ipam:
+      config:
+        - subnet: "${TRUSTED_PROXY_SUBNET:?set TRUSTED_PROXY_SUBNET to the stack network CIDR}"

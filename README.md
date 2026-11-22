@@ -182,9 +182,11 @@ docker build -f deploy/Dockerfile -t privacylink-ip:local .
 The image runs as a non-root user, listens on internal port `8080`, and exposes a
 `/healthz` healthcheck. It must not be published directly to the internet.
 
-- `deploy/compose.example.yml`: internal Docker network, no public port mapping,
-  healthcheck and resource limits.
+- `deploy/compose.example.yml`: integration template with a loopback-only
+  published port, fixed stack network, healthcheck and resource limits.
 - `deploy/Caddyfile.example`: integration template for the three hostnames.
+- `deploy/vps/`: the production stack, Caddy site, root-owned deploy helper and
+  VPS setup runbook for the Softable VPS.
 - `docs/deployment.md`: DNS, network, deployment and rollback runbook.
 
 ## Tests
@@ -209,10 +211,9 @@ depend on the separate frontend files.
 ## Placeholders and production specifics
 
 Production values are intentionally not committed. Replace placeholders such as
-`<YOUR_VPS_IPV4>`, `<YOUR_VPS_IPV6>`, `<TRUSTED_PROXY_SUBNET>`,
-`<EDGE_NETWORK>`, `<APP_DIR>`, DNS credentials and GitHub secrets before
-deploying. DNS provider, VPS provider and the existing Caddy deployment are
-outside this repository.
+`<YOUR_VPS_IPV4>`, `<YOUR_VPS_IPV6>`, `<TRUSTED_PROXY_SUBNET>`, `<HOST_PORT>`,
+`<APP_DIR>`, DNS credentials and GitHub secrets before deploying. DNS provider,
+VPS provider and the existing Caddy deployment are outside this repository.
 
 ## License
 
