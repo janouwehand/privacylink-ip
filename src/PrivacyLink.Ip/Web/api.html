@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API — PrivacyLink IP</title>
+  <meta name="description" content="The PrivacyLink IP API returns your public address as plain text or JSON. No key, no account, no cookies.">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="stylesheet" href="{{ASSET_CSS_URL}}">
+  <script src="{{ASSET_JS_URL}}" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/">
+        <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" aria-hidden="true" focusable="false">
+          <g transform="rotate(-45 20 20)" stroke-width="3.5">
+            <rect x="3.5" y="14" width="20" height="12" rx="6" stroke="#16333A"></rect>
+            <rect x="16.5" y="14" width="20" height="12" rx="6" stroke="#4A9B8D"></rect>
+          </g>
+        </svg>
+        <span class="brand-name">PrivacyLink<span class="brand-suffix"> IP</span></span>
+      </a>
+      <p class="claim"><span class="claim-dot" aria-hidden="true"></span>No ads. No tracking.</p>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">For developers</p>
+      <h1 id="page-title">API</h1>
+      <p class="hero-sub">Your public address as plain text or JSON. No key, no account, no cookies.</p>
+    </section>
+    <div class="hero-rule" aria-hidden="true"></div>
+
+    <div class="doc">
+      <div class="doc__main">
+        <section class="api-section" id="which-address" aria-labelledby="which-title">
+          <h2 id="which-title">Which address do I get?</h2>
+          <p>The hostname decides the address family. The URL path does not.</p>
+
+          <table class="spec-table" role="table">
+            <caption class="sr-only">What each request returns</caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Request</th>
+                <th scope="col" role="columnheader">What you get</th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              <tr role="row">
+                <th scope="row" role="rowheader">
+                  <code>https://{{MAIN_HOST}}/api/ip</code>
+                  <span class="badge">Connection default</span>
+                </th>
+                <td role="cell">Returns the family of the connection that reaches the server. On a dual-stack network that is usually IPv6, but the operating system and client decide — <code>curl</code> may pick either.</td>
+              </tr>
+              <tr role="row">
+                <th scope="row" role="rowheader">
+                  <code>https://{{V4_HOST}}/api/ip</code>
+                  <span class="badge">IPv4 only</span>
+                </th>
+                <td role="cell">Returns an IPv4 address only. The name has an A record only, so clients without IPv4 cannot reach it, except through NAT64 and DNS64.</td>
+              </tr>
+              <tr role="row">
+                <th scope="row" role="rowheader">
+                  <code>https://{{V6_HOST}}/api/ip</code>
+                  <span class="badge">IPv6 only</span>
+                </th>
+                <td role="cell">Returns an IPv6 address only. The name has an AAAA record only, so clients without IPv6 cannot reach it.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="fine">The same applies to <code>/api/ip.json</code>: choose a family with the hostname, not with the path.</p>
+        </section>
+
+        <section class="api-section" id="quick-start" aria-labelledby="quick-start-title">
+          <h2 id="quick-start-title">Quick start</h2>
+          <p>Every client shows the same four requests: plain text, JSON, IPv4 only and IPv6 only. No request needs a key, an account or a special header.</p>
+
+          <noscript>
+            <p class="noscript-note">JavaScript is off. All client examples are shown at once. Select the text of an example to copy it.</p>
+          </noscript>
+
+          <div class="tabs" data-tabs>
+            <div class="tablist" role="tablist" aria-label="Client examples" aria-orientation="horizontal">
+              <button type="button" class="tab" role="tab" id="curl" aria-selected="true" aria-controls="panel-curl" tabindex="0">cURL</button>
+              <button type="button" class="tab" role="tab" id="powershell" aria-selected="false" aria-controls="panel-powershell" tabindex="-1">PowerShell</button>
+              <button type="button" class="tab" role="tab" id="javascript" aria-selected="false" aria-controls="panel-javascript" tabindex="-1">JavaScript</button>
+              <button type="button" class="tab" role="tab" id="python" aria-selected="false" aria-controls="panel-python" tabindex="-1">Python</button>
+              <button type="button" class="tab" role="tab" id="wget" aria-selected="false" aria-controls="panel-wget" tabindex="-1">wget</button>
+            </div>
+
+            <div class="tabpanel" role="tabpanel" id="panel-curl" aria-labelledby="curl" tabindex="0">
+              <div class="codegrid">
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Plain text</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the cURL plain text example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>curl -sS https://{{MAIN_HOST}}/api/ip</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">JSON</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the cURL JSON example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>curl -sS https://{{MAIN_HOST}}/api/ip.json</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv4</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the cURL IPv4 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>curl -sS https://{{V4_HOST}}/api/ip</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv6</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the cURL IPv6 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>curl -sS https://{{V6_HOST}}/api/ip</code></pre>
+                </div>
+              </div>
+              <p class="api-note"><strong>Windows PowerShell 5.1:</strong> <code>curl</code> is an alias for <code>Invoke-WebRequest</code>. Use <code>curl.exe</code> instead, for example <code>curl.exe -sS https://{{MAIN_HOST}}/api/ip</code>.</p>
+            </div>
+
+            <div class="tabpanel" role="tabpanel" id="panel-powershell" aria-labelledby="powershell" tabindex="0">
+              <div class="codegrid">
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Plain text</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the PowerShell plain text example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>Invoke-RestMethod https://{{MAIN_HOST}}/api/ip</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">JSON</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the PowerShell JSON example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>Invoke-RestMethod https://{{MAIN_HOST}}/api/ip.json</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv4</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the PowerShell IPv4 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>Invoke-RestMethod https://{{V4_HOST}}/api/ip</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv6</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the PowerShell IPv6 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>Invoke-RestMethod https://{{V6_HOST}}/api/ip</code></pre>
+                </div>
+              </div>
+              <p class="api-note"><code>Invoke-RestMethod</code> returns plain text as a string and parses JSON into an object. In Windows PowerShell 5.1, <code>curl</code> is not cURL; <code>curl.exe -sS https://{{MAIN_HOST}}/api/ip</code> calls the real client.</p>
+            </div>
+
+            <div class="tabpanel" role="tabpanel" id="panel-javascript" aria-labelledby="javascript" tabindex="0">
+              <div class="codegrid">
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Plain text</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the JavaScript plain text example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>const response = await fetch("https://{{MAIN_HOST}}/api/ip", {
+  cache: "no-store",
+  credentials: "omit"
+});
+
+console.log(await response.text());</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">JSON</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the JavaScript JSON example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>const response = await fetch("https://{{MAIN_HOST}}/api/ip.json", {
+  cache: "no-store",
+  credentials: "omit"
+});
+const data = await response.json();
+
+console.log(data.ip);</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv4</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the JavaScript IPv4 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>const response = await fetch("https://{{V4_HOST}}/api/ip", {
+  cache: "no-store",
+  credentials: "omit"
+});
+
+console.log(await response.text());</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv6</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the JavaScript IPv6 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>const response = await fetch("https://{{V6_HOST}}/api/ip", {
+  cache: "no-store",
+  credentials: "omit"
+});
+
+console.log(await response.text());</code></pre>
+                </div>
+              </div>
+              <p class="api-note">In a browser, these calls are only allowed from <code>https://{{MAIN_HOST}}</code>. The API does not permit other origins. From Node.js or a server there is no such restriction.</p>
+            </div>
+
+            <div class="tabpanel" role="tabpanel" id="panel-python" aria-labelledby="python" tabindex="0">
+              <div class="codegrid">
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Plain text</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the Python plain text example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>import urllib.request
+
+with urllib.request.urlopen("https://{{MAIN_HOST}}/api/ip", timeout=5) as response:
+    print(response.read().decode("utf-8").strip())</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">JSON</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the Python JSON example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>import json
+import urllib.request
+
+with urllib.request.urlopen("https://{{MAIN_HOST}}/api/ip.json", timeout=5) as response:
+    data = json.load(response)
+
+print(data["ip"])</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv4</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the Python IPv4 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>import urllib.request
+
+with urllib.request.urlopen("https://{{V4_HOST}}/api/ip", timeout=5) as response:
+    print(response.read().decode("utf-8").strip())</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv6</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the Python IPv6 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>import urllib.request
+
+with urllib.request.urlopen("https://{{V6_HOST}}/api/ip", timeout=5) as response:
+    print(response.read().decode("utf-8").strip())</code></pre>
+                </div>
+              </div>
+              <p class="api-note">The standard library has no per-request family switch. Use the <code>v4.</code> or <code>v6.</code> hostname when you need one family.</p>
+            </div>
+
+            <div class="tabpanel" role="tabpanel" id="panel-wget" aria-labelledby="wget" tabindex="0">
+              <div class="codegrid">
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Plain text</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the wget plain text example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>wget -qO- https://{{MAIN_HOST}}/api/ip</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">JSON</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the wget JSON example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>wget -qO- https://{{MAIN_HOST}}/api/ip.json</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv4</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the wget IPv4 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>wget -qO- https://{{V4_HOST}}/api/ip</code></pre>
+                </div>
+                <div class="codecard">
+                  <div class="codecard__head">
+                    <span class="codecard__label">Force IPv6</span>
+                    <button type="button" class="copy" data-copy-snippet aria-label="Copy the wget IPv6 example"><span class="copy__label">Copy</span></button>
+                  </div>
+                  <pre class="codecard__body"><code>wget -qO- https://{{V6_HOST}}/api/ip</code></pre>
+                </div>
+              </div>
+              <p class="api-note"><code>-q</code> keeps wget quiet and <code>-O-</code> writes the body to standard output. To pin a family, use the <code>v4.</code> or <code>v6.</code> hostname.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="api-section" id="responses" aria-labelledby="responses-title">
+          <h2 id="responses-title">Response formats</h2>
+          <p>Both endpoints return one address in the body. Neither sets a cookie and both send <code>Cache-Control: no-store</code>. Only <code>GET</code> and <code>HEAD</code> are supported; other methods return <code>405</code>. The examples below use documentation addresses, not real clients.</p>
+
+          <div class="codegrid codegrid--split">
+            <article class="codecard codecard--response">
+              <div class="codecard__head">
+                <span class="codecard__label"><span class="badge badge--ok">200</span>Plain text</span>
+                <button type="button" class="copy" data-copy-snippet aria-label="Copy the plain text response example"><span class="copy__label">Copy</span></button>
+              </div>
+              <pre class="codecard__body"><code>203.0.113.42
+</code></pre>
+              <p class="codecard__note">Content-Type: <code>text/plain; charset=utf-8</code>. The body ends with a single newline, so the next shell prompt starts on its own line.</p>
+            </article>
+
+            <article class="codecard codecard--response">
+              <div class="codecard__head">
+                <span class="codecard__label"><span class="badge badge--ok">200</span>JSON</span>
+                <button type="button" class="copy" data-copy-snippet aria-label="Copy the JSON response example"><span class="copy__label">Copy</span></button>
+              </div>
+              <pre class="codecard__body"><code>{"ip":"203.0.113.42","version":4}</code></pre>
+              <p class="codecard__note">Content-Type: <code>application/json; charset=utf-8</code>. <code>version</code> is the address family, <code>4</code> or <code>6</code>.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="api-section" id="errors" aria-labelledby="errors-title">
+          <h2 id="errors-title">Errors</h2>
+          <p>An error uses the format of the endpoint you called and never echoes request data — no address, Host header or query string appears in the body.</p>
+
+          <table class="spec-table spec-table--errors" role="table">
+            <caption class="sr-only">Error responses</caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Status and code</th>
+                <th scope="col" role="columnheader">When</th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              <tr role="row">
+                <th scope="row" role="rowheader">
+                  <span class="badge badge--warn">400</span>
+                  <code>invalid_host</code>
+                </th>
+                <td role="cell">The Host header is not one of this service's hostnames.</td>
+              </tr>
+              <tr role="row">
+                <th scope="row" role="rowheader">
+                  <span class="badge badge--warn">503</span>
+                  <code>ip_unavailable</code>
+                </th>
+                <td role="cell">The server could not determine a usable client address.</td>
+              </tr>
+              <tr role="row">
+                <th scope="row" role="rowheader">
+                  <span class="badge badge--warn">503</span>
+                  <code>ip_family_mismatch</code>
+                </th>
+                <td role="cell">The request arrived on <code>v4.</code> or <code>v6.</code> but the observed address has the other family, for example through a proxy or NAT64.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="codegrid codegrid--split">
+            <div class="codecard">
+              <div class="codecard__head">
+                <span class="codecard__label">Plain text</span>
+              </div>
+              <pre class="codecard__body"><code>ip_family_mismatch</code></pre>
+            </div>
+            <div class="codecard">
+              <div class="codecard__head">
+                <span class="codecard__label">JSON</span>
+              </div>
+              <pre class="codecard__body"><code>{"error":"ip_family_mismatch"}</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="api-section" id="good-to-know" aria-labelledby="good-title">
+          <h2 id="good-title">Good to know</h2>
+          <p>A few things the address cannot tell you.</p>
+
+          <ul class="notes">
+            <li>A VPN, proxy or carrier-grade NAT can change the address the server observes, so it may not match the one on your router.</li>
+            <li>IPv6 privacy extensions rotate addresses, so two requests from the same device can return different values.</li>
+            <li>A failed check does not prove your ISP has no IPv6. A firewall, VPN or browser policy can block it.</li>
+            <li>On Windows PowerShell 5.1, <code>curl</code> is an alias for <code>Invoke-WebRequest</code>. Use <code>curl.exe</code> for the cURL examples.</li>
+            <li>Browser requests only work from <code>https://{{MAIN_HOST}}</code>. Other websites cannot call the API from JavaScript because no CORS permission is sent to them.</li>
+          </ul>
+        </section>
+      </div>
+
+      <nav class="rail doc__rail" aria-label="On this page">
+        <p class="rail__title">On this page</p>
+        <ul>
+          <li><a href="#which-address">Which address do I get?</a></li>
+          <li><a href="#quick-start">Quick start</a></li>
+          <li><a href="#responses">Response formats</a></li>
+          <li><a href="#errors">Errors</a></li>
+          <li><a href="#good-to-know">Good to know</a></li>
+        </ul>
+        <p>Plain text or JSON. No key, no account, no cookies.</p>
+      </nav>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <nav class="footer-nav" aria-label="Site">
+        <a href="/">Home</a>
+        <a href="/api" aria-current="page">API</a>
+        <a href="https://github.com/janouwehand/privacylink-ip" rel="noopener noreferrer" target="_blank">GitHub<span class="sr-only"> (opens in a new tab)</span></a>
+      </nav>
+      <p class="footer-note">PrivacyLink IP · no ads, no tracking</p>
+    </div>
+  </footer>
+
+  <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

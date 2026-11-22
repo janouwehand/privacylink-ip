@@ -806,6 +806,408 @@ main {
   line-height: 1.55;
 }
 
+/* --- API documentation page --------------------------------------------- */
+
+.doc {
+  display: grid;
+  gap: 36px;
+  align-items: start;
+}
+
+.doc__main {
+  min-width: 0;
+  max-width: 880px;
+  counter-reset: api-sec;
+}
+
+.doc__rail {
+  display: none;
+}
+
+@media (min-width: 70rem) {
+  .doc {
+    grid-template-columns: minmax(0, 880px) minmax(0, 1fr);
+    column-gap: 64px;
+  }
+
+  .doc__rail {
+    display: block;
+    position: sticky;
+    top: 32px;
+    padding-left: 20px;
+    border-left: 1px solid var(--line);
+  }
+}
+
+.api-section {
+  margin-top: 44px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.api-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.api-section h2 {
+  margin: 0 0 12px;
+  color: var(--brand);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  counter-increment: api-sec;
+}
+
+.api-section h2::before {
+  content: counter(api-sec, decimal-leading-zero) " \00B7  ";
+  color: var(--teal-link);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  vertical-align: 0.14em;
+}
+
+.api-section > p {
+  max-width: 68ch;
+  margin: 0 0 14px;
+  color: #444;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.api-section :not(pre) > code,
+.doc__rail code {
+  padding: 1px 5px;
+  border: 1px solid #e3ece8;
+  background: var(--wash);
+  color: var(--brand);
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.fine {
+  max-width: 68ch;
+  margin: 12px 0 0;
+  color: var(--muted-soft);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Tabs */
+
+.tabs {
+  margin-top: 18px;
+}
+
+.tablist {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: thin;
+}
+
+.tab {
+  flex: 0 0 auto;
+  margin: 0 0 -1px;
+  padding: 10px 15px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: #555;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.tab:hover {
+  color: var(--brand);
+  background: var(--wash);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--brand);
+  border-bottom-color: var(--teal);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -3px;
+}
+
+.tabpanel {
+  padding-top: 18px;
+}
+
+.tabpanel:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Code cards */
+
+.codegrid {
+  display: grid;
+  gap: 12px;
+}
+
+.tabpanel .codegrid {
+  margin-top: 0;
+}
+
+@media (min-width: 48rem) {
+  .codegrid--split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.codecard {
+  min-width: 0;
+  border: 1px solid var(--line-teal);
+  background: #fff;
+}
+
+.codecard--response {
+  border-top: 3px solid var(--brand);
+}
+
+.codecard__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-height: 40px;
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid var(--line-teal);
+  background: var(--wash);
+}
+
+.codecard__label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.codecard__body {
+  display: block;
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background: #fff;
+  color: var(--brand);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.75;
+  tab-size: 2;
+}
+
+.codecard__body code {
+  font: inherit;
+  letter-spacing: -0.01em;
+  white-space: pre;
+}
+
+.codecard__note {
+  margin: 0;
+  padding: 10px 16px 12px;
+  border-top: 1px dashed var(--line-teal);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-teal-soft);
+  border-radius: 0;
+  background: #fff;
+  color: var(--brand);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.copy:hover {
+  border-color: var(--teal);
+  color: var(--teal-link);
+}
+
+.copy.is-copied {
+  border-color: var(--teal-link);
+  background: var(--teal-link);
+  color: #fff;
+}
+
+.api-note {
+  margin: 14px 0 0;
+  padding: 12px 16px;
+  border: 1px solid var(--line-teal);
+  border-left: 3px solid var(--teal);
+  background: var(--wash);
+  color: #444;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.api-note strong {
+  color: var(--brand);
+}
+
+/* Tables and badges */
+
+.spec-table {
+  width: 100%;
+  margin: 4px 0 16px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.spec-table thead th {
+  padding: 0 16px 8px 0;
+  border-bottom: 2px solid var(--brand);
+  color: var(--muted-soft);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.spec-table tbody th,
+.spec-table tbody td {
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid var(--line);
+  color: #444;
+  text-align: left;
+  vertical-align: top;
+}
+
+.spec-table thead th:first-child,
+.spec-table tbody th {
+  width: 42%;
+  padding-right: 24px;
+}
+
+.spec-table tbody th {
+  color: var(--brand);
+  font-weight: 400;
+}
+
+.spec-table tbody tr:last-child th,
+.spec-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.spec-table code {
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.spec-table tbody th .badge {
+  display: block;
+  width: max-content;
+  margin-top: 6px;
+}
+
+.spec-table--errors tbody th .badge {
+  display: inline-block;
+  margin: 0 4px 0 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--line-teal-soft);
+  background: #fff;
+  color: var(--teal-deep);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  vertical-align: 0.08em;
+  white-space: nowrap;
+}
+
+.badge--warn {
+  border-color: #e2c3c8;
+  color: var(--danger);
+}
+
+.badge--ok {
+  border-color: var(--line-teal-soft);
+  color: var(--teal-deep);
+}
+
+/* Notes */
+
+.notes {
+  display: grid;
+  gap: 10px;
+  max-width: 68ch;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notes li {
+  position: relative;
+  padding-left: 20px;
+  color: #444;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.notes li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  background: var(--teal);
+}
+
+.block .block-link {
+  margin-top: 16px;
+}
+
+.block .block-link a {
+  font-weight: 700;
+}
+
 /* --- Motion ------------------------------------------------------------- */
 
 @keyframes pulse {
@@ -939,6 +1341,85 @@ main {
 
   .ip-row[data-family="6"] .ip-value {
     font-size: clamp(1.1rem, 3.9vw, 1.35rem);
+  }
+
+  .doc {
+    gap: 28px;
+  }
+
+  .api-section {
+    margin-top: 34px;
+    padding-top: 20px;
+  }
+
+  .api-section h2 {
+    font-size: 18px;
+  }
+
+  .spec-table,
+  .spec-table tbody,
+  .spec-table tr,
+  .spec-table th,
+  .spec-table td {
+    display: block;
+    width: auto;
+  }
+
+  .spec-table {
+    font-size: 14px;
+  }
+
+  .spec-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .spec-table tbody tr {
+    padding: 14px 0 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .spec-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .spec-table tbody th,
+  .spec-table tbody td {
+    width: auto;
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .spec-table tbody td {
+    margin-top: 8px;
+  }
+
+  .spec-table tbody th .badge {
+    margin-top: 6px;
+  }
+
+  .spec-table code {
+    font-size: 12.5px;
+  }
+
+  .tab {
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .codecard__head {
+    padding: 6px 6px 6px 12px;
+  }
+
+  .codecard__body {
+    padding: 12px;
+    font-size: 12px;
   }
 
   .footer-note {

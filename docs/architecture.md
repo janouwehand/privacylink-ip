@@ -18,6 +18,7 @@ Caddy (public edge, TLS, HTTP/2/3)
 privacylink-ip:8080 (ASP.NET Core, non-root, no public port)
       |
       +-- server-rendered HTML (initial IP)
+      +-- /api           documentation page
       +-- /api/ip        text/plain
       +-- /api/ip.json   JSON
       +-- /healthz
@@ -46,11 +47,13 @@ The pipeline order is security-relevant:
 4. **HTTPS redirect.** Outside Development, HTTP requests for allowed hostnames
    receive a `308` to HTTPS. Unknown hosts are never used as redirect targets.
 5. **Static files.** `Web/` is served from the content root. `/index.html` is
-   rewritten to `/` so the template instead of the raw file is served. Assets
-   under `/assets/` are cached for one hour; other static pages for five
-   minutes. (Asset filenames are not content-hashed, so no long immutable
-   caching is used.)
-6. **Endpoints.** `/`, `/api/ip`, `/api/ip.json`, `/healthz`.
+   rewritten to `/` and `/api.html` to `/api` so the templates, not the raw
+   files with placeholders, are served. Assets under `/assets/` are referenced
+   with a content-hash query (`?v=...`). Only the current hash is cached as
+   `public, max-age=31536000, immutable`; unversioned and stale URLs use
+   `public, no-cache` and revalidate via `ETag`. Other static files also use
+   `public, no-cache`.
+6. **Endpoints.** `/`, `/api`, `/api/ip`, `/api/ip.json`, `/healthz`.
 
 ## IP resolution and fail-closed behavior
 
@@ -90,6 +93,12 @@ The homepage is a static template read from `Web/index.html` at request time.
 | `{{INITIAL_IPV4}}` | HTML-encoded IPv4, or empty when the initial family is IPv6 |
 | `{{INITIAL_IPV6}}` | HTML-encoded IPv6, or empty when the initial family is IPv4 |
 | `{{SERVER_STATE}}` | JSON `{"initialIp":"...","initialVersion":4|6,"otherVersion":6|4}` |
+| `{{ASSET_CSS_URL}}` | Content-hashed URL of `/assets/site.css` |
+| `{{ASSET_JS_URL}}` | Content-hashed URL of `/assets/site.js` |
+
+The asset URLs come from `AssetManifest`, which hashes each file once at
+startup. Templates must always use the placeholders instead of hardcoding
+`/assets/...`, otherwise a deploy can leave clients on stale CSS or JS.
 
 IP values are encoded with `HtmlEncoder.Default`. The JSON block is serialized
 with `System.Text.Json`; the default encoder escapes HTML-sensitive characters,
@@ -97,14 +106,32 @@ so the model cannot break out of a `<script type="application/json">` block.
 The renderer is a standalone class so unit tests use inline templates and do not
 depend on frontend files.
 
+The API documentation page is also server-rendered from `Web/api.html`.
+`SiteRenderer.RenderDocs(template, mainHost, v4Host, v6Host, assets)` replaces
+the `{{MAIN_HOST}}`, `{{V4_HOST}}`, `{{V6_HOST}}`, `{{ASSET_CSS_URL}}` and
+`{{ASSET_JS_URL}}` placeholders, again with HTML-encoded values. The page
+contains no visitor-specific data and does not run IP resolution or family
+gating. It is served on all three known hostnames; the global Host allowlist
+still rejects unknown hosts.
+
 ## Caching and cross-origin behavior
 
 - Every IP-bearing response (homepage, `/api/ip`, `/api/ip.json`) has
   `Cache-Control: no-store`, no `ETag` and no `Last-Modified`.
+- The `/api` documentation page uses `Cache-Control: public, no-cache` and a
+  weak `ETag`. Browsers revalidate on every navigation, so a deploy is visible
+  immediately; a matching `If-None-Match` returns `304 Not Modified`.
+- Assets under `/assets/` carry a SHA-256 content hash in the query string.
+  The current URL is cached for one year as `immutable`; unversioned or stale
+  URLs use `public, no-cache` so they revalidate instead of serving old bytes.
+  A query parameter is used instead of a filename segment to avoid a build-time
+  rename step; the only cache in front of the origin is the browser, since
+  Caddy is configured as a pure reverse proxy.
+- Changing `site.css` or `site.js` changes its URL on the next start. Because
+  both HTML pages are revalidated, clients pick up the new URLs directly.
 - `v4.*` and `v6.*` API responses include
   `Access-Control-Allow-Origin: https://ip.privacylink.nl` exactly. No wildcard
   and no credentials header. CORS is not authentication; CLI access remains open.
-- Static, non-IP assets may be cached.
 
 ## Security headers
 

@@ -6,7 +6,10 @@ namespace PrivacyLink.Ip.Tests;
 public sealed class HomepageTests
 {
     private const string Template =
-        "<!doctype html><html><body>" +
+        "<!doctype html><html><head>" +
+        "<link rel=\"stylesheet\" href=\"{{ASSET_CSS_URL}}\">" +
+        "<script src=\"{{ASSET_JS_URL}}\" defer></script>" +
+        "</head><body>" +
         "<div id=\"v4\">{{INITIAL_IPV4}}</div>" +
         "<div id=\"v6\">{{INITIAL_IPV6}}</div>" +
         "<script type=\"application/json\" id=\"server-state\">{{SERVER_STATE}}</script>" +
@@ -51,6 +54,9 @@ public sealed class HomepageTests
             Assert.Contains("<div id=\"v6\"></div>", html);
             Assert.Contains("\"initialVersion\":4", html);
             Assert.Contains("\"otherVersion\":6", html);
+            Assert.DoesNotContain("{{", html);
+            Assert.Contains("href=\"/assets/site.css\"", html);
+            Assert.Contains("src=\"/assets/site.js\"", html);
             Assert.False(response.Headers.Contains("ETag"));
             Assert.False(response.Content.Headers.Contains("Last-Modified"));
         }
