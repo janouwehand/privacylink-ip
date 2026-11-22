@@ -209,7 +209,7 @@ Toon geen gok. De backend registreert een algemene fout zonder client-IP in perm
 **FR-06: Privacy & eenvoud**
 
 - Geen advertenties, cookie-banner, externe fonts, Google Analytics, trackers of scripts van derden.
-- Homepage heeft een korte, duidelijke privacyboodschap; de volledige toelichting staat in `docs/privacy.md`.
+- The homepage carries a short, clear privacy statement; the full explanation lives in `docs/privacy.md`.
 - Geen accounts of persoonsgegevens nodig.
 
 ### 4.2 Concrete MVP schermindeling
@@ -238,7 +238,7 @@ De voorbeeldadressen zijn RFC-documentatieadressen, geen werkelijke detectieresu
 - Geen modal, tab, splashscreen, onboarding of grote hero-banner.
 - Desktop en mobile hebben dezelfde functies.
 - Voorkeur: weinig afhankelijkheden, kleine CSS-bundel, eenvoudige semantische HTML.
-- Licht thema in lijn met privacylink.nl (wit vlak, donker teal en teal accent); respecteer `prefers-reduced-motion`.
+- Light theme aligned with privacylink.nl (white page, dark teal and teal accent); respect `prefers-reduced-motion`.
 - Geen automatische copy bij paginalaad; alleen na expliciete interactie.
 - Bij niet-werkende JavaScript blijft het initial IP zichtbaar en kopieerbaar via tekstselectie; optioneel gewone server-rendered link voor het andere family endpoint.
 
@@ -592,7 +592,7 @@ De website communiceert duidelijk:
 
 Nederlandse vertaling mogelijk in de UI. Controleer deze tekst voor publicatie tegen echte infrastructuur en logconfiguratie.
 
-**Privacyboodschap op de homepage en `docs/privacy.md` bevatten samen minimaal:**
+**The homepage privacy statement and `docs/privacy.md` together cover at least:**
 
 - Welke gegevens worden verwerkt tijdens een netwerkverbinding (waaronder IP om antwoord te kunnen geven).
 - Waarom de gegevens technisch nodig zijn.
@@ -868,7 +868,7 @@ Een server-side DNS-lookup of HTTP-test op user input kan een abuse- of SSRF-opp
 3. **Caddy-netwerk:** bestaande Docker-network/subnet verifiëren voor trusted proxy.
 4. **HTML-template:** eenvoudige veilige template-renderer versus Razor Pages; kies de kleinste veilige optie.
 5. **UI-taal:** initieel Engels voor breed publiek; Nederlandse vertaling later.
-6. **Logo/branding:** hergebruik het PrivacyLink-logo en de kleurstelling van privacylink.nl (donker teal `#16333A`, teal accent `#4A9B8D`, wit vlak).
+6. **Logo/branding:** reuse the PrivacyLink logo and the privacylink.nl palette (dark teal `#16333A`, teal accent `#4A9B8D`, white page).
 7. **API-gebruik van derden:** MVP ondersteunt `curl`; bredere cross-origin browser-CORS kan later expliciet worden verruimd.
 
 ---
