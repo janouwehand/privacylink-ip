@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# PrivacyLink IP deploy helper for the Contabo VPS (softable.nl).
+#
+# Installed as /usr/local/sbin/privacylink-ip-deploy (root:root, 0750) and the
+# only command the deployment account may run through sudo. It accepts exactly
+# one argument: the immutable GHCR image digest to run.
+set -euo pipefail
+umask 077
+
+image="${1:-}"
+compose_dir='/opt/privacylink-ip'
+compose_file="$compose_dir/compose.yaml"
+health_url='http://127.0.0.1:8082/healthz'
+
+if [[ ! "$image" =~ ^ghcr\.io/janouwehand/privacylink-ip@sha256:[a-f0-9]{64}$ ]]; then
+  echo 'Image must be ghcr.io/janouwehand/privacylink-ip pinned by a SHA-256 digest.' >&2
+  exit 64
+fi
+
+if [[ ! -r "$compose_file" ]]; then
+  echo "Missing Compose file: $compose_file" >&2
+  exit 78
+fi
+
+export COMPOSE_PROJECT_NAME='privacylink-ip'
+export PRIVACYLINK_IP_IMAGE="$image"
+
+compose=(docker compose --project-name privacylink-ip --file "$compose_file")
+"${compose[@]}" pull privacylink-ip
+"${compose[@]}" up --no-build --detach --wait --wait-timeout 120 --force-recreate privacylink-ip
+
+for attempt in {1..30}; do
+  if curl --fail --silent --show-error --max-time 5 -H 'Host: ip.privacylink.nl' "$health_url" >/dev/null; then
+    docker image prune --all --force --filter 'label=org.opencontainers.image.source=https://github.com/janouwehand/privacylink-ip'
+    echo "Deployment ready: privacylink-ip ($image)"
+    exit 0
+  fi
+  sleep 2
+done
+
+"${compose[@]}" ps >&2
+echo 'Deployment did not become ready: privacylink-ip' >&2
+exit 1

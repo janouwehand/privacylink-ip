@@ -1,5 +1,9 @@
 * text=auto eol=crlf
 
+# Bash helpers must keep LF so they run unchanged on Linux.
+*.sh text eol=lf
+deploy/vps/privacylink-ip-deploy text eol=lf
+
 *.png binary
 *.jpg binary
 *.jpeg binary

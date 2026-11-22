@@ -13,9 +13,10 @@ credentials.
 - DNS control for `privacylink.nl`.
 - Placeholders to replace:
   - `<YOUR_VPS_IPV4>`, `<YOUR_VPS_IPV6>`
-  - `<TRUSTED_PROXY_SUBNET>` (the Docker network containing Caddy)
-  - `<EDGE_NETWORK>` (external Docker network name)
-  - `<APP_DIR>` (deployment directory on the VPS)
+  - `<TRUSTED_PROXY_SUBNET>` (dedicated Docker network of this stack; its
+    gateway is the trusted proxy peer)
+  - `<HOST_PORT>` (free loopback port published for Caddy, e.g. `8082`)
+  - `<APP_DIR>` (deployment directory on the VPS, e.g. `/opt/privacylink-ip`)
   - `<YOUR_GITHUB_REPOSITORY>`, `<YOUR_GITHUB_ENVIRONMENT>`
 
 ## 1. DNS
@@ -46,17 +47,20 @@ dig AAAA v6.ip.privacylink.nl +short
 
 ## 2. Docker network and trusted proxy
 
-Caddy and the app must share an internal Docker network. The app must not
-publish port 8080.
+Caddy runs on the VPS host and reaches the app through a loopback-only published
+port. The app must not be reachable from the internet and must not share a
+network with the main PrivacyLink stacks.
 
-1. Determine the subnet of the shared network, for example
-   `<TRUSTED_PROXY_SUBNET>` = `172.20.0.0/16`.
+1. Give this stack a dedicated Docker network with a fixed subnet, for example
+   `<TRUSTED_PROXY_SUBNET>` = `10.77.0.0/24`. The container sees Caddy as that
+   network's gateway address (`10.77.0.1`).
 2. Configure the app with `ForwardedHeaders__KnownNetworks__0` set to that
-   subnet, or set `ForwardedHeaders__KnownProxies__0` to the Caddy container IP.
+   subnet. Trusting the dedicated stack network is intentional: the gateway of
+   that subnet is the only peer that can reach the published loopback port.
 3. Keep `ForwardedHeaders__ForwardLimit` at `1` unless a documented multi-hop
    chain exists.
-4. Never use `0.0.0.0/0`, `::/0` or an unbounded Docker network as a trusted
-   proxy.
+4. Never use `0.0.0.0/0`, `::/0` or a shared/unbounded Docker network as a
+   trusted proxy.
 
 If the trusted proxy is not configured, the app fails closed with `503` rather
 than expose the internal address. That is expected until the network is fixed.
@@ -85,9 +89,11 @@ configuration without changing the main PrivacyLink route:
 ```caddyfile
 ip.privacylink.nl, v4.ip.privacylink.nl, v6.ip.privacylink.nl {
 	encode zstd gzip
-	reverse_proxy privacylink-ip:8080
+	reverse_proxy 127.0.0.1:<HOST_PORT>
 }
 ```
+
+The production site block is versioned in `deploy/vps/privacylink-ip.caddy`.
 
 Notes:
 
@@ -112,28 +118,33 @@ for that healthcheck.
 
 ## 6. Deployment workflow
 
-`.github/workflows/deploy.yml` is a placeholder. It:
+`.github/workflows/deploy.yml` builds and deploys the service. It:
 
-1. Builds and pushes immutable GHCR tags: `sha-<12 chars>` and a version tag.
-2. Optionally deploys over SSH when `vars.DEPLOY_ENABLED == 'true'`.
-3. Runs a public smoke test against `vars.SMOKE_URL`.
+1. Builds, tests and format-checks the solution.
+2. Pushes one immutable image to GHCR tagged `sha-<12 chars>` (plus the Git tag
+   for `v*` pushes) and hands the image digest to the deploy job.
+3. Deploys that exact digest over SSH through the root-owned
+   `/usr/local/sbin/privacylink-ip-deploy` helper.
+4. Verifies `/healthz`, both address families from the VPS and that a spoofed
+   `X-Forwarded-For` header does not change the result.
 
-Required GitHub configuration (placeholders, configure manually):
+The deploy job runs in the protected GitHub environment `production`, so it can
+require a manual approval. The VPS setup is documented in
+[`deploy/vps/README.md`](../deploy/vps/README.md).
+
+Required GitHub configuration (placeholders, configure manually in the
+`production` environment):
 
 | Kind | Name | Meaning |
 | --- | --- | --- |
-| Variable | `DEPLOY_ENABLED` | `true` enables the deploy job |
-| Variable | `APP_DIR` | `<APP_DIR>` on the VPS |
-| Variable | `PRIVACYLINK_IP_IMAGE` | image name used by the VPS compose file |
-| Variable | `SMOKE_URL` | e.g. `https://ip.privacylink.nl/api/ip` |
-| Secret | `VPS_HOST` | `<YOUR_VPS_IPV4>` or hostname |
+| Secret | `VPS_HOST` | VPS hostname (`<YOUR_VPS_IPV4>` or a DNS name) |
 | Secret | `VPS_USER` | least-privilege deploy user |
-| Secret | `VPS_SSH_KEY` | private key for that user |
-| Secret | `VPS_KNOWN_HOSTS` | pinned host key line |
+| Secret | `VPS_SSH_PRIVATE_KEY` | private key for that user |
+| Secret | `VPS_SSH_KNOWN_HOSTS` | pinned host key line |
 
-This workflow is independent of the main PrivacyLink deployment and must remain
-so. Use a dedicated deploy user/key with access only to this compose project and
-the minimum Docker privileges.
+The deploy user may only run the deploy helper through sudo and must not be in
+the `docker` group. The helper accepts nothing but a digest of
+`ghcr.io/<YOUR_GITHUB_REPOSITORY>` and must be installed from a reviewed commit.
 
 ## 7. Healthcheck and smoke tests
 
@@ -156,25 +167,25 @@ mismatch never returns `200`; spoofed headers from an unknown proxy are ignored.
 
 ## 8. Rollback
 
-Images are immutable. To roll back:
+Images are immutable and deployments use digests. To roll back:
 
-1. Stop routing new deploys to the new tag.
-2. On the VPS, set `PRIVACYLINK_IP_IMAGE=<image>:<previous-tag>` in the compose
-   environment or `.env` file.
-3. Run `docker compose pull && docker compose up -d`.
-4. Verify `/healthz` and the public smoke tests.
-5. Re-run `deploy.yml` with the previous version tag if the workflow is used for
-   rollback.
+1. Find the previous digest in the GHCR package versions or a previous
+   deployment log.
+2. On the VPS, run
+   `sudo /usr/local/sbin/privacylink-ip-deploy <image>@sha256:<previous-digest>`.
+3. The helper recreates only the app container and waits for `/healthz`.
+4. Verify the public smoke tests in section 7.
 
-Never move or overwrite an existing version tag.
+Never move or overwrite an existing version tag. The helper prunes unused images
+after a healthy deployment, so a rollback may need to pull the old digest again.
 
 ## 9. Operational checklist
 
 - [ ] DNS A/AAAA split verified; no unwanted AAAA on v4, no A on v6.
 - [ ] `HTTPS`/`SVCB` and CNAME records checked.
 - [ ] TLS certificates valid for all three hostnames.
-- [ ] App port 8080 not reachable from the internet.
-- [ ] Trusted proxy set to the exact Caddy network/IP, `ForwardLimit=1`.
+- [ ] App port not reachable from the internet (loopback publish only).
+- [ ] Trusted proxy set to the dedicated stack subnet, `ForwardLimit=1`.
 - [ ] Spoofed `X-Forwarded-For` does not change the response.
 - [ ] Private/container addresses are never returned as visitor IPs.
 - [ ] No IP-bearing response is cached (`Cache-Control: no-store`).

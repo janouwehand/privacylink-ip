@@ -2,7 +2,8 @@
 #
 # This is NOT the final VPS edge configuration. It is an integration example
 # to be merged into the existing Caddy instance without touching the main
-# PrivacyLink routes. Adapt the upstream service name and network.
+# PrivacyLink routes. Replace <HOST_PORT> with the loopback port published by
+# the Compose stack (8082 on the Softable VPS).
 #
 # DNS requirements:
 #   ip.privacylink.nl    A + AAAA
@@ -19,5 +20,5 @@
 
 ip.privacylink.nl, v4.ip.privacylink.nl, v6.ip.privacylink.nl {
 	encode zstd gzip
-	reverse_proxy privacylink-ip:8080
+	reverse_proxy 127.0.0.1:<HOST_PORT>
 }
