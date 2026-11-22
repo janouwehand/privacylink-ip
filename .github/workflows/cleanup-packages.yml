@@ -1,0 +1,144 @@
+name: Clean up container package versions
+
+# Keeps the GHCR package bounded without breaking rollbacks.
+#
+# Policy:
+#   - A version that carries any tag other than `sha-*` (release tags such as
+#     `v1.2.3`, or `latest`) is never deleted.
+#   - Among the `sha-*`-only versions, the newest KEEP_SHA_VERSIONS are kept.
+#   - The newest version overall is always kept, so the image from the latest
+#     deploy is never a candidate.
+#
+# The weekly schedule deletes; a manual run defaults to a dry run.
+#
+# A rollback that is still running an older digest is not visible here. Resolve
+# the rollback before the next scheduled run, or raise keep_sha_versions.
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep_sha_versions:
+        description: "Number of sha-only image versions to keep"
+        default: "10"
+      dry_run:
+        description: "Report what would be deleted without deleting it"
+        type: boolean
+        default: true
+  schedule:
+    # Mondays 04:17 UTC.
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: cleanup-privacylink-ip-package
+  cancel-in-progress: false
+
+env:
+  PACKAGE_NAME: privacylink-ip
+  KEEP_SHA_VERSIONS: ${{ inputs.keep_sha_versions || '10' }}
+
+jobs:
+  cleanup:
+    name: Delete old image versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve package scope
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY%/*}"
+          owner_type=$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.owner.type')
+          if [[ "$owner_type" == "Organization" ]]; then
+            base="/orgs/${owner}/packages/container/${PACKAGE_NAME}"
+          else
+            base="/users/${owner}/packages/container/${PACKAGE_NAME}"
+          fi
+          echo "base=${base}" >> "$GITHUB_OUTPUT"
+
+      - name: List package versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ steps.scope.outputs.base }}
+        run: |
+          set -euo pipefail
+          : > versions.jsonl
+          page=1
+          while true; do
+            body=$(gh api "${BASE}/versions?per_page=100&page=${page}")
+            jq -c '.[]' <<< "$body" >> versions.jsonl
+            if [[ "$(jq 'length' <<< "$body")" -lt 100 ]]; then
+              break
+            fi
+            page=$((page + 1))
+          done
+          jq -s '.' versions.jsonl > versions.json
+          echo "Found $(jq 'length' versions.json) package versions."
+
+      - name: Plan cleanup
+        run: |
+          set -euo pipefail
+          jq --argjson keep "$KEEP_SHA_VERSIONS" '
+            sort_by(.created_at) | reverse
+            | map({
+                id: (.id | tostring),
+                created_at: .created_at,
+                tags: (.metadata.container.tags // []),
+                pinned: ([(.metadata.container.tags // [])[] | select(startswith("sha-") | not)] | length > 0)
+              })
+            | . as $versions
+            | ($versions | map(select(.pinned))) as $pinned
+            | ($versions | map(select(.pinned | not))) as $sha_only
+            | (if $keep < 1 then 1 else $keep end) as $keep_count
+            | {
+                pinned: ($pinned | map({ id, tags })),
+                kept: ($sha_only[0:$keep_count] | map({ id, tags })),
+                targets: ($sha_only[$keep_count:] | map({ id, created_at, tags }))
+              }
+          ' versions.json > plan.json
+
+      - name: Delete old versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ steps.scope.outputs.base }}
+        run: |
+          set -euo pipefail
+          dry_run="${{ inputs.dry_run }}"
+          if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
+            dry_run="false"
+          fi
+          if [[ -z "$dry_run" ]]; then
+            dry_run="true"
+          fi
+
+          mapfile -t ids < <(jq -r '.targets[].id' plan.json)
+
+          {
+            echo "## GHCR cleanup: \`${PACKAGE_NAME}\`"
+            echo
+            echo "- Mode: $([[ "$dry_run" == "true" ]] && echo 'dry run' || echo 'delete')"
+            echo "- Keep \`sha-*\` versions: ${KEEP_SHA_VERSIONS}"
+            echo "- Release/other tagged versions kept: $(jq '.pinned | length' plan.json)"
+            echo "- \`sha-*\` versions kept: $(jq '.kept | length' plan.json)"
+            echo "- Old versions selected: ${#ids[@]}"
+            for id in "${ids[@]:-}"; do
+              [[ -z "$id" ]] && continue
+              jq -r --arg id "$id" \
+                '.targets[] | select(.id == $id) | "- version `\(.id)` created \(.created_at)"' \
+                plan.json
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for id in "${ids[@]:-}"; do
+            [[ -z "$id" ]] && continue
+            if [[ "$dry_run" == "true" ]]; then
+              echo "Would delete version ${id}."
+            else
+              gh api --method DELETE "${BASE}/versions/${id}"
+              echo "Deleted version ${id}."
+            fi
+          done

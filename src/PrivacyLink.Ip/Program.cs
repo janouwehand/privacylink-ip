@@ -96,17 +96,12 @@ if (configuration.GetValue("Https:Redirect", true) && hasTrustedProxyConfigurati
 }
 
 // /index.html is rendered by the homepage endpoint (placeholders must be
-// replaced), never served as a raw static file. /privacy maps to the static
-// privacy.html page so the frontend can use a clean extensionless URL.
+// replaced), never served as a raw static file.
 app.Use((context, next) =>
 {
     if (context.Request.Path == "/index.html")
     {
         context.Request.Path = "/";
-    }
-    else if (context.Request.Path == "/privacy")
-    {
-        context.Request.Path = "/privacy.html";
     }
 
     return next();
