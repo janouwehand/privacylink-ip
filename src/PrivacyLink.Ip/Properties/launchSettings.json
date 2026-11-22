@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "PrivacyLink.Ip": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Dev__AllowNonPublicAddresses": "true"
+      },
+      "applicationUrl": "https://localhost:51842;http://localhost:51843"
+    }
+  }
+}

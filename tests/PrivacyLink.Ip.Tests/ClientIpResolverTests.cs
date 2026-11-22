@@ -1,5 +1,9 @@
 using System.Net;
 using System.Net.Sockets;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using PrivacyLink.Ip.Services;
 using Xunit;
 
@@ -55,5 +59,50 @@ public sealed class ClientIpResolverTests
     public void IsPubliclyRoutable_RejectsNonPublicRanges(string value, bool expected)
     {
         Assert.Equal(expected, ClientIpResolver.IsPubliclyRoutable(IPAddress.Parse(value)));
+    }
+
+    [Theory]
+    [InlineData("Development", true, "127.0.0.1", true)]
+    [InlineData("Development", true, "::1", true)]
+    [InlineData("Development", false, "127.0.0.1", false)]
+    [InlineData("Production", true, "127.0.0.1", false)]
+    [InlineData("Development", true, "203.0.113.42", true)]
+    public void DevAllowance_AppliesOnlyInDevelopmentWhenEnabled(
+        string environmentName, bool flag, string remoteIp, bool expectSuccess)
+    {
+        var resolver = CreateResolver(environmentName, flag);
+
+        var result = resolver.Resolve(ContextWithRemoteIp(remoteIp));
+
+        Assert.Equal(expectSuccess, result.Success);
+        Assert.Equal(expectSuccess ? remoteIp : null, result.Address?.ToString());
+    }
+
+    private static ClientIpResolver CreateResolver(string environmentName, bool allowNonPublic)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Dev:AllowNonPublicAddresses"] = allowNonPublic ? "true" : "false"
+            })
+            .Build();
+
+        var environment = new FakeHostEnvironment { EnvironmentName = environmentName };
+        return new ClientIpResolver(configuration, environment);
+    }
+
+    private static HttpContext ContextWithRemoteIp(string remoteIp)
+    {
+        var context = new DefaultHttpContext();
+        context.Connection.RemoteIpAddress = IPAddress.Parse(remoteIp);
+        return context;
+    }
+
+    private sealed class FakeHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Development;
+        public string ApplicationName { get; set; } = "tests";
+        public string ContentRootPath { get; set; } = string.Empty;
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }

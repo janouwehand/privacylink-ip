@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace PrivacyLink.Ip.Services;
 
@@ -13,9 +15,26 @@ namespace PrivacyLink.Ip.Services;
 /// address means the trusted-proxy configuration is missing or wrong, and
 /// presenting it would leak the internal container/proxy address as if it
 /// were the visitor's public address.
+///
+/// The single exception is an explicit local-development opt-in: when the host
+/// runs in the <c>Development</c> environment AND <c>Dev:AllowNonPublicAddresses</c>
+/// is enabled, non-public addresses are returned so the UI can be exercised on
+/// <c>localhost</c>. This flag never applies outside Development, so production
+/// behaviour remains fail-closed.
 /// </remarks>
 public sealed class ClientIpResolver
 {
+    private readonly bool _allowNonPublic;
+
+    public ClientIpResolver(IConfiguration configuration, IHostEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(environment);
+
+        _allowNonPublic = environment.IsDevelopment()
+            && configuration.GetValue("Dev:AllowNonPublicAddresses", false);
+    }
+
     /// <summary>
     /// Converts an IPv4-mapped IPv6 address (for example <c>::ffff:192.0.2.1</c>)
     /// to its IPv4 form. Other addresses are returned unchanged.
@@ -100,7 +119,7 @@ public sealed class ClientIpResolver
         }
 
         var normalized = Normalize(remote);
-        if (!IsPubliclyRoutable(normalized))
+        if (!IsPubliclyRoutable(normalized) && !_allowNonPublic)
         {
             return IpResolution.Fail("remote_address_not_public");
         }

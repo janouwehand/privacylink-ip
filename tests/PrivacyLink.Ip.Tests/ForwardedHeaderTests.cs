@@ -135,4 +135,19 @@ public sealed class ForwardedHeaderTests
         Assert.Equal(System.Net.HttpStatusCode.ServiceUnavailable, response.StatusCode);
         Assert.DoesNotContain("192.168.1.10", await response.Content.ReadAsStringAsync());
     }
+
+    [Fact]
+    public async Task DevAllowance_ReturnsLoopbackWhenEnabledInDevelopment()
+    {
+        using var factory = new PrivacyLinkAppFactory(new Dictionary<string, string?>
+        {
+            ["Dev:AllowNonPublicAddresses"] = "true"
+        });
+        using var client = factory.CreateAppClient();
+
+        using var response = await Requests.GetAsync(client, "/api/ip", MainHost, remoteIp: "127.0.0.1");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("127.0.0.1\n", await response.Content.ReadAsStringAsync());
+    }
 }

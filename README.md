@@ -43,12 +43,28 @@ The app listens on `http://localhost:5000` by default.
 ### Local development and fail-closed behavior
 
 The backend deliberately refuses to present loopback, private, link-local,
-CGNAT or unspecified addresses as a visitor's public IP. On plain `localhost`
-the connection address is `127.0.0.1`, so API calls return `503` until a trusted
-proxy is configured.
+CGNAT or unspecified addresses as a visitor's public IP. Production behaviour is
+always fail-closed: a missing or wrong trusted-proxy configuration returns `503`
+instead of showing the internal container/proxy address.
 
-To simulate a public client locally, trust the local loopback proxy and send a
-documentation address:
+#### Running in Visual Studio / `dotnet run`
+
+The `Properties/launchSettings.json` profile sets
+`Dev__AllowNonPublicAddresses=true` alongside
+`ASPNETCORE_ENVIRONMENT=Development`. **In Development only**, this opt-in lets
+the app display the observed `127.0.0.1` / `::1` address so you can exercise the
+page, the copy buttons and the status states locally. Press **F5** (or run
+`dotnet run --project src/PrivacyLink.Ip`) and open the launched URL.
+
+This flag is ignored outside Development, so it can never weaken production
+behaviour. From `localhost` the browser cannot reach the second-family
+`v4.*` / `v6.*` hostnames, so that row shows its honest "not reachable" state —
+which is expected locally and is itself useful to verify.
+
+#### Simulating a real public client (API)
+
+To exercise the exact public-IP path locally, trust the loopback proxy and send
+a documentation address:
 
 ```bash
 ASPNETCORE_ENVIRONMENT=Development \
@@ -151,6 +167,7 @@ canonical production hostnames.
 | `ForwardedHeaders:ForwardLimit` | `ForwardedHeaders__ForwardLimit` | `1` | Maximum proxy hops |
 | `Cors:AllowedOrigin` | `Cors__AllowedOrigin` | `https://ip.privacylink.nl` | Exact browser origin for v4/v6 APIs |
 | `Https:Redirect` | `Https__Redirect` | `true` | HTTP→HTTPS redirect outside Development |
+| `Dev:AllowNonPublicAddresses` | `Dev__AllowNonPublicAddresses` | `false` | **Development only.** Display loopback/private addresses so the UI can be exercised locally. Ignored outside Development. |
 
 Never configure `KnownProxies`/`KnownNetworks` to trust all addresses. A missing
 or wrong trusted-proxy configuration fails closed with `503` instead of showing
