@@ -14,8 +14,13 @@
 
   var TIMEOUT_MS = 3000;
   var COPY_RESET_MS = 1800;
+  var dutch = document.documentElement.lang === "nl";
 
-  var RESULT_TEXT = {
+  var RESULT_TEXT = dutch ? {
+    timeout: "controle duurde te lang",
+    unavailable: "niet bereikbaar vanuit deze browser",
+    error: "controle mislukt"
+  } : {
     timeout: "check timed out",
     unavailable: "not reachable from this browser",
     error: "check failed"
@@ -135,6 +140,15 @@
       return entry.note;
     }
     var name = label(family);
+    if (dutch) {
+      switch (entry.status) {
+        case "loading": return name + "-adres controleren\u2026";
+        case "timeout": return "Geen antwoord binnen 3 seconden. Een firewall, proxy of VPN kan deze controle blokkeren.";
+        case "unavailable": return "Niet bereikbaar vanuit deze browser. Dit bewijst niet dat je verbinding geen " + name + " heeft; een VPN, firewall of proxy kan dit veroorzaken.";
+        case "error": return "De " + name + "-controle kon niet worden voltooid. Probeer het later opnieuw.";
+        default: return "";
+      }
+    }
     switch (entry.status) {
       case "loading":
         return "Checking for an " + name + " address\u2026";
@@ -181,7 +195,7 @@
     if (el.copy) {
       if (entry.ip) {
         el.copy.disabled = false;
-        el.copy.setAttribute("aria-label", "Copy " + label(family) + " address");
+        el.copy.setAttribute("aria-label", dutch ? label(family) + "-adres kopiëren" : "Copy " + label(family) + " address");
       } else {
         el.copy.disabled = true;
       }
@@ -199,6 +213,15 @@
   function phrase(family) {
     var entry = state[family];
     var name = label(family);
+    if (dutch) {
+      switch (entry.status) {
+        case "available": return name + " beschikbaar";
+        case "loading": return name + " controleren\u2026";
+        case "timeout": return name + " duurde te lang";
+        case "unavailable": return name + " niet bereikbaar";
+        default: return name + "-controle mislukt";
+      }
+    }
     switch (entry.status) {
       case "available":
         return name + " available";
@@ -223,8 +246,8 @@
     var both = state[4].status === "available" && state[6].status === "available";
     var busy = state[4].status === "loading" || state[6].status === "loading";
     var message = both
-      ? "Connection: IPv4 + IPv6 available"
-      : "Connection: " + phrase(4) + " \u00B7 " + phrase(6);
+      ? (dutch ? "Verbinding: IPv4 + IPv6 beschikbaar" : "Connection: IPv4 + IPv6 available")
+      : (dutch ? "Verbinding: " : "Connection: ") + phrase(4) + " \u00B7 " + phrase(6);
 
     if (text.textContent !== message) {
       text.textContent = message;
@@ -287,20 +310,20 @@
     copyText(entry.ip).then(function () {
       window.clearTimeout(copyTimers[family]);
       el.copy.classList.add("is-copied");
-      setCopyLabel(el.copy, "Copied");
+      setCopyLabel(el.copy, dutch ? "Gekopieerd" : "Copied");
       copyTimers[family] = window.setTimeout(function () {
         el.copy.classList.remove("is-copied");
-        setCopyLabel(el.copy, "Copy");
+        setCopyLabel(el.copy, dutch ? "Kopiëren" : "Copy");
       }, COPY_RESET_MS);
-      announce(label(family) + " address copied.");
+      announce(label(family) + (dutch ? "-adres gekopieerd." : " address copied."));
     }).catch(function () {
       window.clearTimeout(copyTimers[family]);
-      setCopyLabel(el.copy, "Copy failed");
+      setCopyLabel(el.copy, dutch ? "Kopiëren mislukt" : "Copy failed");
       copyTimers[family] = window.setTimeout(function () {
-        setCopyLabel(el.copy, "Copy");
+        setCopyLabel(el.copy, dutch ? "Kopiëren" : "Copy");
       }, COPY_RESET_MS + 700);
       selectValue(el.value);
-      announce("Copy failed. The address is selected, so you can copy it with your keyboard.");
+      announce(dutch ? "Kopiëren mislukt. Het adres is geselecteerd zodat je het met je toetsenbord kunt kopiëren." : "Copy failed. The address is selected, so you can copy it with your keyboard.");
     });
   }
 
@@ -410,7 +433,7 @@
       entry.note = "";
       render(family);
       renderConnection();
-      announce(label(family) + " address found.");
+      announce(label(family) + (dutch ? "-adres gevonden." : " address found."));
     }).catch(function (error) {
       if (timedOut || (error && error.name === "AbortError")) {
         fail("timeout");
@@ -653,12 +676,12 @@
       state[4] = {
         status: "error",
         ip: "",
-        note: "This page could not read the address the server sent. Reload the page to try again."
+        note: dutch ? "Deze pagina kon het adres van de server niet lezen. Laad de pagina opnieuw." : "This page could not read the address the server sent. Reload the page to try again."
       };
       state[6] = {
         status: "error",
         ip: "",
-        note: "This page could not read the address the server sent. Reload the page to try again."
+        note: dutch ? "Deze pagina kon het adres van de server niet lezen. Laad de pagina opnieuw." : "This page could not read the address the server sent. Reload the page to try again."
       };
       render(4);
       render(6);

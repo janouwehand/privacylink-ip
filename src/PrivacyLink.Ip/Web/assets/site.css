@@ -186,6 +186,46 @@ a {
   background: var(--teal);
 }
 
+.header-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+/* Language switch, ported 1:1 from the PrivacyLink web app
+   (src/styles.css .language). Explicit UA font metrics keep anchors
+   identical to the original buttons; active state uses aria-current. */
+.language {
+  display: flex;
+  flex: none;
+  height: 38px;
+  padding: 3px;
+  gap: 2px;
+  background: var(--wash-strong);
+}
+
+.language a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border: 0;
+  background: transparent;
+  color: #526b64;
+  font-family: Arial, sans-serif;
+  font-size: 13.3333px;
+  font-weight: 700;
+  line-height: normal;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.language a[aria-current="page"] {
+  background: var(--brand);
+  color: #fff;
+}
+
 /* --- Main / hero -------------------------------------------------------- */
 
 main {

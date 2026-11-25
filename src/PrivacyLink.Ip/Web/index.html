@@ -3,8 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PrivacyLink IP — your public IP address</title>
+  <title>What is my IP address? Find your public IPv4 and IPv6 — PrivacyLink IP</title>
   <meta name="description" content="See the public IPv4 and IPv6 addresses this server observes for your connection. Copy either one. No ads, no tracking, nothing stored.">
+  <link rel="canonical" href="https://{{MAIN_HOST}}/{{LANG}}/">
+  <link rel="alternate" hreflang="en" href="https://{{MAIN_HOST}}/en/">
+  <link rel="alternate" hreflang="nl" href="https://{{MAIN_HOST}}/nl/">
+  <link rel="alternate" hreflang="x-default" href="https://{{MAIN_HOST}}/">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#ffffff">
   <link rel="stylesheet" href="{{ASSET_CSS_URL}}">
@@ -25,7 +29,13 @@
         </svg>
         <span class="brand-name">PrivacyLink<span class="brand-suffix"> IP</span></span>
       </a>
-      <p class="claim"><span class="claim-dot" aria-hidden="true"></span>No ads. No tracking.</p>
+      <div class="header-tools">
+        <p class="claim"><span class="claim-dot" aria-hidden="true"></span>No ads. No tracking.</p>
+        <nav class="language" aria-label="Language">
+          <a href="/nl/" lang="nl" hreflang="nl">NL</a>
+          <a href="/en/" lang="en" hreflang="en" aria-current="page">EN</a>
+        </nav>
+      </div>
     </div>
   </header>
 
@@ -42,7 +52,7 @@
         <div class="ip-row__head">
           <h2 class="ip-row__label" id="ipv4-label">01 · Your public IPv4</h2>
         </div>
-        <div class="ip-row__body">
+        <div class="ip-row__body" data-nosnippet>
           <output id="ipv4-value" class="ip-value" aria-live="off">{{INITIAL_IPV4}}</output>
           <div class="ip-row__actions">
             <button type="button" class="btn" id="ipv4-copy" aria-label="Copy IPv4 address" disabled>
@@ -61,7 +71,7 @@
         <div class="ip-row__head">
           <h2 class="ip-row__label" id="ipv6-label">02 · Your public IPv6</h2>
         </div>
-        <div class="ip-row__body">
+        <div class="ip-row__body" data-nosnippet>
           <output id="ipv6-value" class="ip-value" aria-live="off">{{INITIAL_IPV6}}</output>
           <div class="ip-row__actions">
             <button type="button" class="btn" id="ipv6-copy" aria-label="Copy IPv6 address" disabled>

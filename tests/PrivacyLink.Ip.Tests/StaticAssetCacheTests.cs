@@ -51,7 +51,7 @@ public sealed class StaticAssetCacheTests
             using var factory = new PrivacyLinkAppFactory(contentRoot: root);
             using var client = factory.CreateAppClient();
 
-            using var page = await Requests.GetAsync(client, "/", MainHost, "203.0.113.42");
+            using var page = await Requests.GetAsync(client, "/en/", MainHost, "203.0.113.42");
             var html = await page.Content.ReadAsStringAsync();
             var match = Regex.Match(html, "/assets/site\\.css\\?v=(?<version>[0-9a-f]{16})");
             Assert.True(match.Success, html);

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wat is mijn IP-adres? Bekijk je publieke IPv4 en IPv6 — PrivacyLink IP</title>
+  <meta name="description" content="Bekijk je publieke IPv4- en IPv6-adres en kopieer ze eenvoudig. Geen advertenties, geen tracking en niets opgeslagen.">
+  <link rel="canonical" href="https://{{MAIN_HOST}}/{{LANG}}/">
+  <link rel="alternate" hreflang="en" href="https://{{MAIN_HOST}}/en/">
+  <link rel="alternate" hreflang="nl" href="https://{{MAIN_HOST}}/nl/">
+  <link rel="alternate" hreflang="x-default" href="https://{{MAIN_HOST}}/">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="stylesheet" href="{{ASSET_CSS_URL}}">
+  <script type="application/json" id="ip-server-state">{{SERVER_STATE}}</script>
+  <script src="{{ASSET_JS_URL}}" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Direct naar inhoud</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/nl/"><svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" aria-hidden="true" focusable="false"><g transform="rotate(-45 20 20)" stroke-width="3.5"><rect x="3.5" y="14" width="20" height="12" rx="6" stroke="#16333A"></rect><rect x="16.5" y="14" width="20" height="12" rx="6" stroke="#4A9B8D"></rect></g></svg><span class="brand-name">PrivacyLink<span class="brand-suffix"> IP</span></span></a>
+      <div class="header-tools">
+        <p class="claim"><span class="claim-dot" aria-hidden="true"></span>Geen advertenties. Geen tracking.</p>
+        <nav class="language" aria-label="Taal">
+          <a href="/nl/" lang="nl" hreflang="nl" aria-current="page">NL</a>
+          <a href="/en/" lang="en" hreflang="en">EN</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="wrap">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Je verbinding</p>
+      <h1 id="page-title">Je publieke IP, <span class="hero-accent">zoals de wereld het ziet</span></h1>
+      <p class="hero-sub">De IPv4- en IPv6-adressen die deze server voor je verbinding ziet. Kopieer ze eenvoudig — er wordt niets opgeslagen.</p>
+    </section>
+    <div class="hero-rule" aria-hidden="true"></div>
+    <div class="ip-stack">
+      <section class="ip-row" data-family="4" data-status="unknown" aria-labelledby="ipv4-label">
+        <div class="ip-row__head"><h2 class="ip-row__label" id="ipv4-label">01 · Je publieke IPv4</h2></div>
+        <div class="ip-row__body" data-nosnippet>
+          <output id="ipv4-value" class="ip-value" aria-live="off">{{INITIAL_IPV4}}</output>
+          <div class="ip-row__actions"><button type="button" class="btn" id="ipv4-copy" aria-label="IPv4-adres kopiëren" disabled><svg class="btn__icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><rect x="5.6" y="2.7" width="7.7" height="7.7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"></rect><rect x="2.7" y="5.6" width="7.7" height="7.7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"></rect></svg><span class="btn__label">Kopiëren</span></button></div>
+        </div>
+        <p class="ip-row__note" id="ipv4-note" hidden></p>
+      </section>
+      <section class="ip-row" data-family="6" data-status="unknown" aria-labelledby="ipv6-label">
+        <div class="ip-row__head"><h2 class="ip-row__label" id="ipv6-label">02 · Je publieke IPv6</h2></div>
+        <div class="ip-row__body" data-nosnippet>
+          <output id="ipv6-value" class="ip-value" aria-live="off">{{INITIAL_IPV6}}</output>
+          <div class="ip-row__actions">
+            <button type="button" class="btn" id="ipv6-copy" aria-label="IPv6-adres kopiëren" disabled><svg class="btn__icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><rect x="5.6" y="2.7" width="7.7" height="7.7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"></rect><rect x="2.7" y="5.6" width="7.7" height="7.7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"></rect></svg><span class="btn__label">Kopiëren</span></button>
+            <button type="button" class="btn btn--ghost" id="ipv6-retry" aria-label="IPv6-detectie opnieuw proberen" hidden><svg class="btn__icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M13.2 8a5.2 5.2 0 1 1-1.7-3.9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path><path d="M13.4 2.6v2.7h-2.7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="btn__label">Opnieuw proberen</span></button>
+          </div>
+        </div>
+        <p class="ip-row__note" id="ipv6-note" hidden></p>
+      </section>
+    </div>
+    <p class="connection" id="connection" data-state="wait"><span class="connection__dot" aria-hidden="true"></span><span id="connection-text">Verbinding: het andere adres wordt gecontroleerd…</span></p>
+    <noscript><p class="noscript-note">JavaScript staat uit. Het adres hierboven is door de server weergegeven. Voor automatische detectie en de kopieerknoppen is JavaScript nodig; selecteer het adres om het te kopiëren.</p></noscript>
+    <div class="details">
+      <section class="block" id="about" aria-labelledby="about-title">
+        <h2 id="about-title">Over</h2>
+        <p>PrivacyLink IP is een klein, onafhankelijk opensourcehulpmiddel met één taak: de publieke IP-adressen tonen die deze server voor je verbinding ziet. Geen advertenties, geen account, geen analytics en geen geschiedenis van bezoekers.</p>
+        <p>Beide adressen krijgen een eigen rij en een eigen kopieerknop. Het adres van de verbinding die deze pagina opende, staat in de pagina zelf en is dus zichtbaar voordat er een script draait.</p>
+      </section>
+      <section class="block" id="api" aria-labelledby="api-title">
+        <h2 id="api-title">API</h2>
+        <p>Hetzelfde antwoord zonder browser: platte tekst of JSON, zonder cookies of sleutel.</p>
+        <pre class="snippet"><code>curl -sS https://ip.privacylink.nl/api/ip</code></pre>
+        <p>Gebruik <code>https://v4.ip.privacylink.nl/api/ip</code> voor alleen IPv4 en <code>https://v6.ip.privacylink.nl/api/ip</code> voor alleen IPv6.</p>
+        <p class="block-link"><a href="/api">Volledige API-documentatie (Engels) <span aria-hidden="true">→</span></a></p>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="wrap footer-inner">
+    <nav class="footer-nav" aria-label="Site"><a href="/api">API</a> <a href="https://github.com/janouwehand/privacylink-ip" rel="noopener noreferrer" target="_blank">GitHub<span class="sr-only"> (opent in een nieuw tabblad)</span></a></nav>
+    <p class="footer-note">PrivacyLink IP · geen advertenties, geen tracking</p>
+  </div></footer>
+  <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
