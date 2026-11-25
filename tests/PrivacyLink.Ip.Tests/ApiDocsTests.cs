@@ -79,7 +79,7 @@ public sealed class ApiDocsTests
     }
 
     [Fact]
-    public async Task Api_WithTrailingSlash_ReturnsTheSameRenderedDocs()
+    public async Task Api_WithTrailingSlash_RedirectsPermanently()
     {
         var root = CreateContentRoot();
         try
@@ -88,12 +88,9 @@ public sealed class ApiDocsTests
             using var client = factory.CreateAppClient();
 
             using var response = await Requests.GetAsync(client, "/api/", MainHost);
-            var html = await response.Content.ReadAsStringAsync();
 
-            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal("text/html; charset=utf-8", response.Content.Headers.ContentType?.ToString());
-            Assert.DoesNotContain("{{", html);
-            Assert.Contains("Which address do I get?", html);
+            Assert.Equal(System.Net.HttpStatusCode.MovedPermanently, response.StatusCode);
+            Assert.Equal("/api", response.Headers.Location?.ToString());
         }
         finally
         {
@@ -102,7 +99,7 @@ public sealed class ApiDocsTests
     }
 
     [Fact]
-    public async Task ApiHtmlAlias_IsRewrittenAndRendered()
+    public async Task ApiHtmlAlias_RedirectsPermanently()
     {
         var root = CreateContentRoot();
         try
@@ -111,12 +108,31 @@ public sealed class ApiDocsTests
             using var client = factory.CreateAppClient();
 
             using var response = await Requests.GetAsync(client, "/api.html", MainHost);
-            var html = await response.Content.ReadAsStringAsync();
 
-            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal("text/html; charset=utf-8", response.Content.Headers.ContentType?.ToString());
-            Assert.DoesNotContain("{{", html);
-            Assert.Contains("curl.exe", html);
+            Assert.Equal(System.Net.HttpStatusCode.MovedPermanently, response.StatusCode);
+            Assert.Equal("/api", response.Headers.Location?.ToString());
+        }
+        finally
+        {
+            DeleteContentRoot(root);
+        }
+    }
+
+    [Theory]
+    [InlineData(V4Host)]
+    [InlineData(V6Host)]
+    public async Task FamilyHostnameDocs_RedirectToMainHost(string host)
+    {
+        var root = CreateContentRoot();
+        try
+        {
+            using var factory = new PrivacyLinkAppFactory(contentRoot: root);
+            using var client = factory.CreateAppClient();
+
+            using var response = await Requests.GetAsync(client, "/api", host);
+
+            Assert.Equal(System.Net.HttpStatusCode.MovedPermanently, response.StatusCode);
+            Assert.Equal("https://ip.privacylink.nl/api", response.Headers.Location?.ToString());
         }
         finally
         {

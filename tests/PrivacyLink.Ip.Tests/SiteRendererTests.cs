@@ -18,7 +18,7 @@ public sealed class SiteRendererTests
     [Fact]
     public void RenderHtml_FillsOnlyTheMatchingFamilyPlaceholder()
     {
-        var html = Renderer.RenderHtml(Template, new IpState("203.0.113.42", 4, 6), Assets);
+        var html = Renderer.RenderHtml(Template, new IpState("203.0.113.42", 4, 6), "ip.privacylink.nl", "v4.ip.privacylink.nl", "v6.ip.privacylink.nl", Assets);
 
         Assert.Contains("<div id=\"v4\">203.0.113.42</div>", html);
         Assert.Contains("<div id=\"v6\"></div>", html);
@@ -27,7 +27,7 @@ public sealed class SiteRendererTests
     [Fact]
     public void RenderHtml_FillsIpv6AndLeavesIpv4Empty()
     {
-        var html = Renderer.RenderHtml(Template, new IpState("2001:db8::1", 6, 4), Assets);
+        var html = Renderer.RenderHtml(Template, new IpState("2001:db8::1", 6, 4), "ip.privacylink.nl", "v4.ip.privacylink.nl", "v6.ip.privacylink.nl", Assets);
 
         Assert.Contains("<div id=\"v4\"></div>", html);
         Assert.Contains("<div id=\"v6\">2001:db8::1</div>", html);
@@ -36,7 +36,7 @@ public sealed class SiteRendererTests
     [Fact]
     public void RenderHtml_EncodesHtmlInjectionInModelValues()
     {
-        var html = Renderer.RenderHtml(Template, new IpState("<script>alert(1)</script>&\"'", 4, 6), Assets);
+        var html = Renderer.RenderHtml(Template, new IpState("<script>alert(1)</script>&\"'", 4, 6), "ip.privacylink.nl", "v4.ip.privacylink.nl", "v6.ip.privacylink.nl", Assets);
 
         Assert.DoesNotContain("<script>alert(1)</script>", html);
         Assert.DoesNotContain("203.0.113.42", html);
@@ -46,7 +46,7 @@ public sealed class SiteRendererTests
     [Fact]
     public void RenderHtml_WritesExactServerStateShape()
     {
-        var html = Renderer.RenderHtml(Template, new IpState("203.0.113.42", 4, 6), Assets);
+        var html = Renderer.RenderHtml(Template, new IpState("203.0.113.42", 4, 6), "ip.privacylink.nl", "v4.ip.privacylink.nl", "v6.ip.privacylink.nl", Assets);
 
         Assert.Contains(
             "<script type=\"application/json\" id=\"state\">{\"initialIp\":\"203.0.113.42\",\"initialVersion\":4,\"otherVersion\":6}</script>",
@@ -58,7 +58,7 @@ public sealed class SiteRendererTests
     {
         const string template = "{{INITIAL_IPV4}}-{{INITIAL_IPV4}}{{SERVER_STATE}}{{SERVER_STATE}}";
 
-        var html = Renderer.RenderHtml(template, new IpState("203.0.113.42", 4, 6), Assets);
+        var html = Renderer.RenderHtml(template, new IpState("203.0.113.42", 4, 6), "ip.privacylink.nl", "v4.ip.privacylink.nl", "v6.ip.privacylink.nl", Assets);
 
         Assert.DoesNotContain("{{", html);
     }
@@ -93,11 +93,29 @@ public sealed class SiteRendererTests
     }
 
     [Fact]
+    public void RenderHtml_ReplacesHostPlaceholders()
+    {
+        const string template = "{{MAIN_HOST}}|{{V4_HOST}}|{{V6_HOST}}";
+
+        var html = Renderer.RenderHtml(
+            template,
+            new IpState("203.0.113.42", 4, 6),
+            "ip.privacylink.nl",
+            "v4.ip.privacylink.nl",
+            "v6.ip.privacylink.nl",
+            Assets);
+
+        Assert.Equal(
+            "ip.privacylink.nl|v4.ip.privacylink.nl|v6.ip.privacylink.nl",
+            html);
+    }
+
+    [Fact]
     public void RenderHtml_ReplacesAssetUrlPlaceholders()
     {
         const string template = "<link href=\"{{ASSET_CSS_URL}}\"><script src=\"{{ASSET_JS_URL}}\"></script>";
 
-        var html = Renderer.RenderHtml(template, new IpState("203.0.113.42", 4, 6), Assets);
+        var html = Renderer.RenderHtml(template, new IpState("203.0.113.42", 4, 6), "ip.privacylink.nl", "v4.ip.privacylink.nl", "v6.ip.privacylink.nl", Assets);
 
         Assert.DoesNotContain("{{", html);
         Assert.Contains("href=\"/assets/site.css\"", html);

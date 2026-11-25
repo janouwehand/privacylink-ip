@@ -46,14 +46,16 @@ The pipeline order is security-relevant:
    no-referrer`, `Permissions-Policy`, CSP and HSTS (HTTPS only).
 4. **HTTPS redirect.** Outside Development, HTTP requests for allowed hostnames
    receive a `308` to HTTPS. Unknown hosts are never used as redirect targets.
-5. **Static files.** `Web/` is served from the content root. `/index.html` is
-   rewritten to `/` and `/api.html` to `/api` so the templates, not the raw
-   files with placeholders, are served. Assets under `/assets/` are referenced
-   with a content-hash query (`?v=...`). Only the current hash is cached as
-   `public, max-age=31536000, immutable`; unversioned and stale URLs use
-   `public, no-cache` and revalidate via `ETag`. Other static files also use
+5. **Canonical redirects.** `/index.html` redirects permanently to `/`,
+   `/api.html` and `/api/` redirect permanently to `/api`, and the homepage and
+   API documentation on the `v4.*`/`v6.*` hostnames redirect to the main
+   hostname. This keeps one indexable URL per page. Assets under `/assets/` are
+   referenced with a content-hash query (`?v=...`). Only the current hash is
+   cached as `public, max-age=31536000, immutable`; unversioned and stale URLs
+   use `public, no-cache` and revalidate via `ETag`. Other static files also use
    `public, no-cache`.
-6. **Endpoints.** `/`, `/api`, `/api/ip`, `/api/ip.json`, `/healthz`.
+6. **Endpoints.** `/`, `/api`, `/api/ip`, `/api/ip.json`, `/healthz`,
+   `/robots.txt`, `/sitemap.xml`.
 
 ## IP resolution and fail-closed behavior
 
@@ -90,6 +92,9 @@ The homepage is a static template read from `Web/index.html` at request time.
 
 | Placeholder | Value |
 | --- | --- |
+| `{{MAIN_HOST}}` | HTML-encoded main hostname, used in canonical and Open Graph URLs |
+| `{{V4_HOST}}` | HTML-encoded IPv4-only hostname |
+| `{{V6_HOST}}` | HTML-encoded IPv6-only hostname |
 | `{{INITIAL_IPV4}}` | HTML-encoded IPv4, or empty when the initial family is IPv6 |
 | `{{INITIAL_IPV6}}` | HTML-encoded IPv6, or empty when the initial family is IPv4 |
 | `{{SERVER_STATE}}` | JSON `{"initialIp":"...","initialVersion":4|6,"otherVersion":6|4}` |
@@ -111,7 +116,8 @@ The API documentation page is also server-rendered from `Web/api.html`.
 the `{{MAIN_HOST}}`, `{{V4_HOST}}`, `{{V6_HOST}}`, `{{ASSET_CSS_URL}}` and
 `{{ASSET_JS_URL}}` placeholders, again with HTML-encoded values. The page
 contains no visitor-specific data and does not run IP resolution or family
-gating. It is served on all three known hostnames; the global Host allowlist
+gating. It is served on the main hostname; requests for the documentation on
+`v4.*` or `v6.*` redirect to the canonical main URL. The global Host allowlist
 still rejects unknown hosts.
 
 ## Caching and cross-origin behavior
@@ -132,6 +138,23 @@ still rejects unknown hosts.
 - `v4.*` and `v6.*` API responses include
   `Access-Control-Allow-Origin: https://ip.privacylink.nl` exactly. No wildcard
   and no credentials header. CORS is not authentication; CLI access remains open.
+
+## Search engine behavior
+
+- `/` and `/api` are the only indexable pages. Both carry a self-referencing
+  canonical URL, `index, follow` robots metadata and JSON-LD.
+- `/index.html`, `/api.html`, `/api/` and the homepage/API documentation on
+  `v4.*`/`v6.*` redirect permanently to the canonical URL.
+- `/robots.txt` allows crawling on the main hostname and disallows the API-only
+  hostnames. It points to `/sitemap.xml`, which lists only main-host URLs.
+- `/api/ip`, `/api/ip.json`, `/healthz` and all error responses send
+  `X-Robots-Tag: noindex, nofollow`. Raw address data must not appear in search
+  results.
+- IP-bearing responses keep `Cache-Control: no-store`. `no-store` is a caching
+  directive, not an indexing directive; Google can still index `/` while it
+  revalidates the address on every crawl.
+- The visible copy targets the primary intent without changing the tool's
+  behavior. See `docs/seo.md` for the keyword, content and Search Console plan.
 
 ## Security headers
 

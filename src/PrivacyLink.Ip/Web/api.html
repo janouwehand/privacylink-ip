@@ -3,11 +3,61 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>API — PrivacyLink IP</title>
-  <meta name="description" content="The PrivacyLink IP API returns your public address as plain text or JSON. No key, no account, no cookies.">
+  <title>IP Address API — Plain Text &amp; JSON | PrivacyLink IP</title>
+  <meta name="description" content="Get your public IPv4 or IPv6 address as plain text or JSON with cURL, PowerShell, JavaScript or Python. No key, no account, no cookies.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://{{MAIN_HOST}}/api">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="PrivacyLink IP">
+  <meta property="og:title" content="IP Address API — Plain Text &amp; JSON">
+  <meta property="og:description" content="Get your public IPv4 or IPv6 address as plain text or JSON. No key, no account, no cookies.">
+  <meta property="og:url" content="https://{{MAIN_HOST}}/api">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="IP Address API — Plain Text &amp; JSON">
+  <meta name="twitter:description" content="Get your public IPv4 or IPv6 address as plain text or JSON. No key, no account, no cookies.">
   <link rel="stylesheet" href="{{ASSET_CSS_URL}}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "@id": "https://{{MAIN_HOST}}/api#article",
+        "headline": "IP Address API: plain text and JSON",
+        "description": "Get the public IPv4 or IPv6 address of a request as plain text or JSON. No key, no account, no cookies.",
+        "url": "https://{{MAIN_HOST}}/api",
+        "mainEntityOfPage": "https://{{MAIN_HOST}}/api",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "PrivacyLink IP",
+          "url": "https://{{MAIN_HOST}}/"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://{{MAIN_HOST}}/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "API",
+            "item": "https://{{MAIN_HOST}}/api"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
   <script src="{{ASSET_JS_URL}}" defer></script>
 </head>
 <body>
@@ -29,10 +79,16 @@
   </header>
 
   <main id="main" class="wrap">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">API</span>
+    </nav>
+
     <section class="hero" aria-labelledby="page-title">
       <p class="eyebrow">For developers</p>
-      <h1 id="page-title">API</h1>
-      <p class="hero-sub">Your public address as plain text or JSON. No key, no account, no cookies.</p>
+      <h1 id="page-title">IP address API</h1>
+      <p class="hero-sub">Get the public IPv4 or IPv6 address of the requesting connection as plain text or JSON. No key, no account, no cookies.</p>
     </section>
     <div class="hero-rule" aria-hidden="true"></div>
 
@@ -40,7 +96,7 @@
       <div class="doc__main">
         <section class="api-section" id="which-address" aria-labelledby="which-title">
           <h2 id="which-title">Which address do I get?</h2>
-          <p>The hostname decides the address family. The URL path does not.</p>
+          <p>Use this API to look up the public IP address of any client that can make an HTTPS request. The hostname decides the address family; the URL path selects the response format. Raw responses are not intended for search engines.</p>
 
           <table class="spec-table" role="table">
             <caption class="sr-only">What each request returns</caption>

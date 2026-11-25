@@ -3,11 +3,74 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PrivacyLink IP — your public IP address</title>
-  <meta name="description" content="See the public IPv4 and IPv6 addresses this server observes for your connection. Copy either one. No ads, no tracking, nothing stored.">
+  <title>What Is My IP Address? Check IPv4 &amp; IPv6</title>
+  <meta name="description" content="What is my IP address? See your public IPv4 and IPv6 addresses instantly. Copy either one with a click. No ads, no tracking, nothing stored.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://{{MAIN_HOST}}/">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PrivacyLink IP">
+  <meta property="og:title" content="What Is My IP Address? Check IPv4 &amp; IPv6">
+  <meta property="og:description" content="See your public IPv4 and IPv6 addresses instantly. Copy either one with a click. No ads, no tracking, nothing stored.">
+  <meta property="og:url" content="https://{{MAIN_HOST}}/">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="What Is My IP Address? Check IPv4 &amp; IPv6">
+  <meta name="twitter:description" content="See your public IPv4 and IPv6 addresses instantly. No ads, no tracking, nothing stored.">
   <link rel="stylesheet" href="{{ASSET_CSS_URL}}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://{{MAIN_HOST}}/#website",
+        "url": "https://{{MAIN_HOST}}/",
+        "name": "PrivacyLink IP",
+        "alternateName": "PrivacyLink IP address checker",
+        "description": "A fast, ad-free public IPv4 and IPv6 address checker.",
+        "inLanguage": "en"
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://{{MAIN_HOST}}/#webapp",
+        "name": "PrivacyLink IP",
+        "url": "https://{{MAIN_HOST}}/",
+        "description": "Shows the public IPv4 and IPv6 address observed for your connection. No ads, no tracking, nothing stored.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Modern browser. The first address is server-rendered; JavaScript adds the second family and the copy buttons.",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        },
+        "featureList": [
+          "Show the public IPv4 address",
+          "Show the public IPv6 address",
+          "Copy an address with one click",
+          "Plain text and JSON API"
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://{{MAIN_HOST}}/#webpage",
+        "url": "https://{{MAIN_HOST}}/",
+        "name": "What Is My IP Address? Check IPv4 & IPv6",
+        "isPartOf": {
+          "@id": "https://{{MAIN_HOST}}/#website"
+        },
+        "about": {
+          "@id": "https://{{MAIN_HOST}}/#webapp"
+        },
+        "inLanguage": "en"
+      }
+    ]
+  }
+  </script>
   <script type="application/json" id="ip-server-state">{{SERVER_STATE}}</script>
   <script src="{{ASSET_JS_URL}}" defer></script>
 </head>
@@ -31,9 +94,9 @@
 
   <main id="main" class="wrap">
     <section class="hero" aria-labelledby="page-title">
-      <p class="eyebrow">Your connection</p>
-      <h1 id="page-title">Your public IP, <span class="hero-accent">as the world sees it</span></h1>
-      <p class="hero-sub">The IPv4 and IPv6 addresses this server observes for your connection. Copy either one — nothing is stored.</p>
+      <p class="eyebrow">Public IP lookup</p>
+      <h1 id="page-title">What is my IP address?</h1>
+      <p class="hero-sub">See the public IPv4 and IPv6 addresses this server observes for your connection. Copy either one — no ads, no tracking, nothing stored.</p>
     </section>
     <div class="hero-rule" aria-hidden="true"></div>
 
@@ -95,24 +158,94 @@
 
     <div class="details">
       <section class="block" id="about" aria-labelledby="about-title">
-        <h2 id="about-title">About</h2>
+        <h2 id="about-title">About this IP checker</h2>
         <p>PrivacyLink IP is a small, independent, open-source tool with one job: show the public IP addresses this server observes for your connection. No ads, no account, no analytics, no history of who connected.</p>
         <p>Both address families get their own row and their own Copy button. The address of the connection that loaded this page is part of the page itself, so it is visible before any script runs.</p>
+      </section>
+
+      <section class="block" id="what-is-an-ip" aria-labelledby="what-title">
+        <h2 id="what-title">What is an IP address?</h2>
+        <p>An IP address is the number a network uses to route traffic to and from your connection. On the public internet, every request carries the address of the connection that sent it, which is why this page can show it to you. It is not your name, your account or your exact location.</p>
+        <p>Your device also has a private address inside your home or office network, such as <code>192.168.1.20</code>. Websites do not see that private address; your router translates it to the public address shown above.</p>
+      </section>
+
+      <section class="block" id="ipv4-vs-ipv6" aria-labelledby="families-title">
+        <h2 id="families-title">IPv4 and IPv6: what is the difference?</h2>
+        <p>IPv4 addresses are four numbers separated by dots, such as <code>203.0.113.42</code>. IPv6 addresses are longer and use hexadecimal groups separated by colons, such as <code>2001:db8::1</code>. IPv6 exists because the IPv4 address pool is exhausted.</p>
+        <p>Many connections support both families. A website only sees the family that the connection used, so this page checks the other family with one additional request. If that check fails, it does not prove your provider has no IPv6 — a VPN, firewall or proxy can block it.</p>
+      </section>
+
+      <section class="block" id="public-vs-private" aria-labelledby="public-private-title">
+        <h2 id="public-private-title">Public vs private IP address</h2>
+        <p>The address shown here is public: it is how your connection appears to the internet. A private address, such as <code>10.0.0.5</code> or <code>192.168.1.20</code>, only works inside your own network. Your router uses NAT to share one public address with several devices.</p>
+        <p>On mobile networks, carrier-grade NAT can put many customers behind one public address. In that case the address you see belongs to the carrier's gateway, not to your phone alone.</p>
+      </section>
+
+      <section class="block" id="why-change" aria-labelledby="change-title">
+        <h2 id="change-title">Why does my IP address change?</h2>
+        <p>Most home connections use a dynamic address that the provider can change after a router restart, a lease expiry or network maintenance. A VPN, proxy or a switch between Wi-Fi and mobile data also changes the address a website sees.</p>
+        <p>IPv6 privacy extensions can rotate the address more often. Each visit to this page is a snapshot of the connection at that moment, not a permanent identifier.</p>
+      </section>
+
+      <section class="block" id="hide-ip" aria-labelledby="hide-title">
+        <h2 id="hide-title">How can I hide my IP address?</h2>
+        <p>A VPN routes your traffic through a server, and websites see that server's address instead of your own. A proxy works similarly, often for a single application. Tor adds more layers at the cost of speed.</p>
+        <p>Hiding the address does not make you anonymous: cookies, browser fingerprints and logged-in accounts can still identify you. This page does not use them, but other sites may.</p>
       </section>
 
       <section class="block" id="api" aria-labelledby="api-title">
         <h2 id="api-title">API</h2>
         <p>The same answer without a browser: plain text or JSON, no cookies, no key.</p>
-        <pre class="snippet"><code>curl -sS https://ip.privacylink.nl/api/ip</code></pre>
-        <p>This hostname answers with whichever family your connection uses. For IPv4 only use <code>https://v4.ip.privacylink.nl/api/ip</code>; for IPv6 only use <code>https://v6.ip.privacylink.nl/api/ip</code>.</p>
+        <pre class="snippet"><code>curl -sS https://{{MAIN_HOST}}/api/ip</code></pre>
+        <p>This hostname answers with whichever family your connection uses. For IPv4 only use <code>https://{{V4_HOST}}/api/ip</code>; for IPv6 only use <code>https://{{V6_HOST}}/api/ip</code>.</p>
         <p class="block-link"><a href="/api">Full API documentation <span aria-hidden="true">→</span></a></p>
       </section>
     </div>
+
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Frequently asked questions</h2>
+
+      <details>
+        <summary>What is my IP address?</summary>
+        <p>It is the public address shown at the top of this page: the address this server observes for the connection that loaded the page. If you use a VPN, proxy or carrier-grade NAT, you see that gateway's address. Your device's private address, such as <code>192.168.1.20</code>, is not visible to websites.</p>
+      </details>
+
+      <details>
+        <summary>Why do IPv4 and IPv6 show different results?</summary>
+        <p>They are separate address families and can take different routes. A connection may have IPv4 only, IPv6 only or both. IPv6 privacy extensions can also rotate the address between requests, so the value is a snapshot rather than a fixed identity.</p>
+      </details>
+
+      <details>
+        <summary>Is my IP address personal data?</summary>
+        <p>Under the GDPR, an IP address can be personal data when it can be linked to a person, for example through a provider's records. This service does not build that link: it does not store a history of visitor addresses, set cookies or run analytics.</p>
+      </details>
+
+      <details>
+        <summary>Can someone find my home with my IP address?</summary>
+        <p>Not the exact address. An IP address can support a rough location estimate, usually a country or region and sometimes a city, but it does not contain your street, name or phone number. Only your provider can map the address to a subscriber.</p>
+      </details>
+
+      <details>
+        <summary>Does this site store my IP address?</summary>
+        <p>No. The address is used to answer the request and is not written to application logs or a database. The page has no cookies, no analytics and no third-party scripts. Network providers and hosting infrastructure may still process connection metadata.</p>
+      </details>
+
+      <details>
+        <summary>How do I check my IP address with curl?</summary>
+        <p>Run <code>curl -sS https://{{MAIN_HOST}}/api/ip</code> for plain text, or use <code>/api/ip.json</code> for JSON. The <code>v4.</code> and <code>v6.</code> hostnames force one address family. No key or account is needed.</p>
+      </details>
+
+      <details>
+        <summary>Why does the IPv6 row say "not reachable"?</summary>
+        <p>The browser could not reach the IPv6-only hostname. That can happen on an IPv4-only connection, but also because of a VPN, firewall, DNS64 or browser policy. A failed check does not prove that your provider has no IPv6.</p>
+      </details>
+    </section>
   </main>
 
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <nav class="footer-nav" aria-label="Site">
+        <a href="#faq">FAQ</a>
         <a href="/api">API</a>
         <a href="https://github.com/janouwehand/privacylink-ip" rel="noopener noreferrer" target="_blank">GitHub<span class="sr-only"> (opens in a new tab)</span></a>
       </nav>

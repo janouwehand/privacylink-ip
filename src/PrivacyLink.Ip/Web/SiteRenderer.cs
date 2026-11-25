@@ -11,24 +11,36 @@ public sealed record IpState(
     [property: JsonPropertyName("otherVersion")] int OtherVersion);
 
 /// <summary>
-/// Renders the static HTML template by replacing the IP, server-state and
-/// content-hashed asset placeholders. The renderer is intentionally tiny and
-/// allocation-friendly, and all inserted values are encoded before insertion.
+/// Renders the static HTML template by replacing the hostname, IP, server-state
+/// and content-hashed asset placeholders. The renderer is intentionally tiny
+/// and allocation-friendly, and all inserted values are encoded before insertion.
 /// </summary>
 public sealed class SiteRenderer
 {
     private static readonly JsonSerializerOptions ServerStateJsonOptions = new(JsonSerializerDefaults.Web);
 
-    public string RenderHtml(string template, IpState model, AssetManifest assets)
+    public string RenderHtml(
+        string template,
+        IpState model,
+        string mainHost,
+        string v4Host,
+        string v6Host,
+        AssetManifest assets)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(mainHost);
+        ArgumentNullException.ThrowIfNull(v4Host);
+        ArgumentNullException.ThrowIfNull(v6Host);
         ArgumentNullException.ThrowIfNull(assets);
 
         var ipv4 = model.InitialVersion == 4 ? model.InitialIp : string.Empty;
         var ipv6 = model.InitialVersion == 6 ? model.InitialIp : string.Empty;
 
         return template
+            .Replace("{{MAIN_HOST}}", HtmlEncoder.Default.Encode(mainHost), StringComparison.Ordinal)
+            .Replace("{{V4_HOST}}", HtmlEncoder.Default.Encode(v4Host), StringComparison.Ordinal)
+            .Replace("{{V6_HOST}}", HtmlEncoder.Default.Encode(v6Host), StringComparison.Ordinal)
             .Replace("{{INITIAL_IPV4}}", HtmlEncoder.Default.Encode(ipv4), StringComparison.Ordinal)
             .Replace("{{INITIAL_IPV6}}", HtmlEncoder.Default.Encode(ipv6), StringComparison.Ordinal)
             .Replace("{{SERVER_STATE}}", JsonSerializer.Serialize(model, ServerStateJsonOptions), StringComparison.Ordinal)

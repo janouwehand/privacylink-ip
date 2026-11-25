@@ -103,18 +103,25 @@ if (configuration.GetValue("Https:Redirect", true) && hasTrustedProxyConfigurati
     });
 }
 
-// /index.html is rendered by the homepage endpoint (placeholders must be
-// replaced), never served as a raw static file. /api.html is rewritten to the
-// API documentation endpoint for the same reason.
+// /index.html and /api.html are aliases for the rendered endpoints. Redirect
+// them permanently so search engines see one canonical URL per page instead of
+// duplicate HTML at several paths. The v4/v6 API hostnames redirect the
+// homepage and documentation to the main hostname.
 app.Use((context, next) =>
 {
+    var hostKind = hosts.Classify(context.Request.Host.Host);
+    var onFamilyHost = hostKind is HostKind.V4 or HostKind.V6;
+
     if (context.Request.Path == "/index.html")
     {
-        context.Request.Path = "/";
+        RedirectPermanent(context, onFamilyHost ? $"https://{hosts.Main}/" : "/");
+        return Task.CompletedTask;
     }
-    else if (context.Request.Path == "/api.html")
+
+    if (context.Request.Path == "/api.html" || context.Request.Path == "/api/")
     {
-        context.Request.Path = "/api";
+        RedirectPermanent(context, onFamilyHost ? $"https://{hosts.Main}/api" : "/api");
+        return Task.CompletedTask;
     }
 
     return next();
@@ -142,6 +149,10 @@ if (Directory.Exists(webRoot))
         }
     });
 }
+
+app.MapMethods("/robots.txt", ["GET", "HEAD"], HandleRobots);
+
+app.MapMethods("/sitemap.xml", ["GET", "HEAD"], HandleSitemap);
 
 app.MapMethods("/healthz", ["GET", "HEAD"], HandleHealth);
 
@@ -186,10 +197,52 @@ async Task HandleHealth(HttpContext context)
     context.Response.StatusCode = StatusCodes.Status200OK;
     context.Response.ContentType = "text/plain; charset=utf-8";
     context.Response.Headers.CacheControl = "no-store";
+    context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
 
     if (!HttpMethods.IsHead(context.Request.Method))
     {
         await context.Response.WriteAsync("ok\n");
+    }
+}
+
+async Task HandleRobots(HttpContext context)
+{
+    var hostKind = hosts.Classify(context.Request.Host.Host);
+
+    // Only the main hostname is a search destination. The v4/v6 hostnames are
+    // API transport endpoints; keep crawlers away from duplicate documentation
+    // and raw address responses there.
+    var body = hostKind == HostKind.Main
+        ? $"User-agent: *\nAllow: /\nDisallow: /healthz\n\nSitemap: https://{hosts.Main}/sitemap.xml\n"
+        : "User-agent: *\nDisallow: /\n";
+
+    context.Response.StatusCode = StatusCodes.Status200OK;
+    context.Response.ContentType = "text/plain; charset=utf-8";
+    context.Response.Headers.CacheControl = "public, max-age=3600";
+
+    if (!HttpMethods.IsHead(context.Request.Method))
+    {
+        await context.Response.WriteAsync(body, context.RequestAborted);
+    }
+}
+
+async Task HandleSitemap(HttpContext context)
+{
+    var mainHost = System.Security.SecurityElement.Escape(hosts.Main);
+    var body =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+        "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n" +
+        $"  <url><loc>https://{mainHost}/</loc></url>\n" +
+        $"  <url><loc>https://{mainHost}/api</loc></url>\n" +
+        "</urlset>\n";
+
+    context.Response.StatusCode = StatusCodes.Status200OK;
+    context.Response.ContentType = "application/xml; charset=utf-8";
+    context.Response.Headers.CacheControl = "public, max-age=3600";
+
+    if (!HttpMethods.IsHead(context.Request.Method))
+    {
+        await context.Response.WriteAsync(body, context.RequestAborted);
     }
 }
 
@@ -207,6 +260,9 @@ async Task HandleIpAsync(HttpContext context, bool json)
     }
 
     ApplyCors(context, hostKind);
+
+    // Raw address responses are data, not search results.
+    context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
 
     var resolution = resolver.Resolve(context);
     if (!resolution.Success)
@@ -253,6 +309,12 @@ async Task HandleApiDocs(HttpContext context)
     // The page contains no visitor-specific data, so it is cacheable and does
     // not need client IP resolution or IP-family gating. Unknown Host headers
     // are already rejected by the global allowlist middleware.
+    if (hosts.Classify(context.Request.Host.Host) is HostKind.V4 or HostKind.V6)
+    {
+        RedirectPermanent(context, $"https://{hosts.Main}/api");
+        return;
+    }
+
     var templatePath = Path.Combine(app.Environment.ContentRootPath, "Web", "api.html");
     if (!File.Exists(templatePath))
     {
@@ -291,6 +353,14 @@ async Task HandleHomepage(HttpContext context)
         return;
     }
 
+    // The homepage only exists on the main hostname. The family hostnames are
+    // part of the API, not separate search destinations.
+    if (hostKind is HostKind.V4 or HostKind.V6)
+    {
+        RedirectPermanent(context, $"https://{hosts.Main}/");
+        return;
+    }
+
     var resolution = resolver.Resolve(context);
     if (!resolution.Success)
     {
@@ -319,7 +389,7 @@ async Task HandleHomepage(HttpContext context)
 
     var template = await File.ReadAllTextAsync(templatePath, context.RequestAborted);
     var model = new IpState(address.ToString(), version, version == 4 ? 6 : 4);
-    var html = renderer.RenderHtml(template, model, assets);
+    var html = renderer.RenderHtml(template, model, hosts.Main, hosts.V4, hosts.V6, assets);
 
     context.Response.StatusCode = StatusCodes.Status200OK;
     context.Response.ContentType = "text/html; charset=utf-8";
@@ -344,6 +414,12 @@ void NoStore(HttpContext context)
     context.Response.Headers.CacheControl = "no-store";
     context.Response.Headers.Remove("ETag");
     context.Response.Headers.Remove("Last-Modified");
+}
+
+static void RedirectPermanent(HttpContext context, string target)
+{
+    context.Response.StatusCode = StatusCodes.Status301MovedPermanently;
+    context.Response.Headers.Location = target + context.Request.QueryString.Value;
 }
 
 // Cache validators are weak because a shared/edge cache may re-encode the body.
@@ -375,6 +451,7 @@ async Task WriteErrorAsync(HttpContext context, int statusCode, string errorCode
 {
     context.Response.StatusCode = statusCode;
     NoStore(context);
+    context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
 
     // Error responses never echo request data (no IP, host or headers).
     if (json)
@@ -400,6 +477,7 @@ async Task HandleUnhandledError(HttpContext context)
     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
     context.Response.ContentType = "text/plain; charset=utf-8";
     NoStore(context);
+    context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
 
     if (!HttpMethods.IsHead(context.Request.Method))
     {

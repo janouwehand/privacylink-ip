@@ -59,6 +59,7 @@ public sealed class HomepageTests
             Assert.Contains("src=\"/assets/site.js\"", html);
             Assert.False(response.Headers.Contains("ETag"));
             Assert.False(response.Content.Headers.Contains("Last-Modified"));
+            Assert.False(response.Headers.Contains("X-Robots-Tag"));
         }
         finally
         {
@@ -67,7 +68,7 @@ public sealed class HomepageTests
     }
 
     [Fact]
-    public async Task IndexHtml_AliasRendersTheSameTemplate()
+    public async Task IndexHtml_AliasRedirectsPermanentlyToRoot()
     {
         var root = CreateContentRoot();
         try
@@ -76,11 +77,32 @@ public sealed class HomepageTests
             using var client = factory.CreateAppClient();
 
             using var response = await Requests.GetAsync(client, "/index.html", "ip.privacylink.nl", "2001:db8::1");
-            var html = await response.Content.ReadAsStringAsync();
 
-            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Contains("<div id=\"v6\">2001:db8::1</div>", html);
-            Assert.DoesNotContain("{{", html);
+            Assert.Equal(System.Net.HttpStatusCode.MovedPermanently, response.StatusCode);
+            Assert.Equal("/", response.Headers.Location?.ToString());
+            Assert.Equal(string.Empty, await response.Content.ReadAsStringAsync());
+        }
+        finally
+        {
+            DeleteContentRoot(root);
+        }
+    }
+
+    [Theory]
+    [InlineData("v4.ip.privacylink.nl")]
+    [InlineData("v6.ip.privacylink.nl")]
+    public async Task FamilyHostnameHomepage_RedirectsToMainHost(string host)
+    {
+        var root = CreateContentRoot();
+        try
+        {
+            using var factory = new PrivacyLinkAppFactory(contentRoot: root);
+            using var client = factory.CreateAppClient();
+
+            using var response = await Requests.GetAsync(client, "/", host, "203.0.113.42");
+
+            Assert.Equal(System.Net.HttpStatusCode.MovedPermanently, response.StatusCode);
+            Assert.Equal("https://ip.privacylink.nl/", response.Headers.Location?.ToString());
         }
         finally
         {

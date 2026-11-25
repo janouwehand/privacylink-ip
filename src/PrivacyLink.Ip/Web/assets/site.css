@@ -202,6 +202,28 @@ main {
   text-transform: uppercase;
 }
 
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px;
+  color: var(--muted-soft);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.breadcrumb a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--teal-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .hero {
   margin: 0 0 26px;
 }
@@ -548,8 +570,61 @@ main {
 }
 
 #about,
-#api {
+#api,
+#faq {
   scroll-margin-top: 24px;
+}
+
+/* --- FAQ --------------------------------------------------------------- */
+
+.faq {
+  margin-top: 40px;
+  padding-top: 34px;
+  border-top: 1px solid var(--line);
+}
+
+.faq h2 {
+  margin: 0 0 18px;
+  color: var(--brand);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.faq details {
+  max-width: 72ch;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.faq details:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.faq summary {
+  cursor: pointer;
+  color: var(--brand);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.faq summary:hover {
+  color: var(--teal-link);
+}
+
+.faq summary::marker {
+  color: var(--teal);
+}
+
+.faq details p {
+  max-width: 68ch;
+  margin: 10px 0 0;
+  color: #444;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
 /* --- Footer ------------------------------------------------------------- */

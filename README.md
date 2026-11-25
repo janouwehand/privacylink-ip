@@ -1,5 +1,8 @@
 # PrivacyLink IP
 
+**Live:** <https://ip.privacylink.nl/> · **API documentation:**
+<https://ip.privacylink.nl/api>
+
 A fast, ad-free, privacy-first public-IP display service. It shows the IPv4
 and/or IPv6 address that the server observes for the visitor's connection.
 
@@ -181,6 +184,19 @@ Invoke-RestMethod https://ip.privacylink.nl/api/ip.json
   `{{ASSET_CSS_URL}}` / `{{ASSET_JS_URL}}` (or extend `AssetManifest`) instead
   of hardcoding its path.
 
+## Search engines
+
+`/` and `/api` are the indexable pages. Both have a canonical URL, a title and
+H1 aimed at the primary query, Open Graph metadata and JSON-LD structured data.
+`/index.html`, `/api.html` and `/api/` redirect permanently to the canonical
+URL, and the homepage/API documentation on `v4.*`/`v6.*` redirect to the main
+hostname. `/robots.txt` points crawlers to `/sitemap.xml`, which lists only
+main-host URLs. Raw address endpoints and errors send `X-Robots-Tag: noindex`.
+
+IP-bearing responses keep `Cache-Control: no-store`; that is not an indexing
+blocker. See [Search engine optimization](docs/seo.md) for the Search Console
+steps, keyword plan and realistic expectations.
+
 ## Configuration
 
 All environment-specific values are configuration, not hardcoded. Defaults in
@@ -237,6 +253,7 @@ depend on the separate frontend files.
 - [Architecture](docs/architecture.md)
 - [Deployment and operations](docs/deployment.md)
 - [Privacy](docs/privacy.md)
+- [Search engine optimization](docs/seo.md)
 - [ADR 0001: forwarded headers](docs/adr/0001-forwarded-headers.md)
 - [ADR 0002: API documentation page](docs/adr/0002-api-documentation-page.md)
 
