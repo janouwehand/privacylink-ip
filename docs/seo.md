@@ -41,20 +41,23 @@ cite for specific queries.
 
 | URL | Behavior | Indexable |
 | --- | --- | --- |
-| `https://ip.privacylink.nl/` | Homepage | Yes |
+| `https://ip.privacylink.nl/` | English homepage (`x-default`) | Yes |
+| `https://ip.privacylink.nl/nl` | Dutch homepage | Yes |
 | `https://ip.privacylink.nl/api` | API documentation | Yes |
 | `https://ip.privacylink.nl/index.html` | `301` to `/` | No, redirect |
+| `https://ip.privacylink.nl/nl/` and `/index.nl.html` | `301` to `/nl` | No, redirect |
 | `https://ip.privacylink.nl/api.html` | `301` to `/api` | No, redirect |
 | `https://ip.privacylink.nl/api/` | `301` to `/api` | No, redirect |
 | `https://v4.ip.privacylink.nl/` | `301` to the main homepage | No, redirect |
 | `https://v6.ip.privacylink.nl/` | `301` to the main homepage | No, redirect |
+| `/nl` on either family hostname | `301` to the main Dutch homepage | No, redirect |
 | `https://v4.ip.privacylink.nl/api` | `301` to the main API page | No, redirect |
 | `https://v6.ip.privacylink.nl/api` | `301` to the main API page | No, redirect |
 | `https://ip.privacylink.nl/api/ip` | Plain-text data | No, `X-Robots-Tag` |
 | `https://ip.privacylink.nl/api/ip.json` | JSON data | No, `X-Robots-Tag` |
 | `https://ip.privacylink.nl/healthz` | Health check | No, `X-Robots-Tag` |
 
-Both rendered pages also carry a self-referencing `<link rel="canonical">`.
+Each rendered page carries a self-referencing `<link rel="canonical">`.
 The family hostnames are excluded from crawling by their own `robots.txt`
 response (`Disallow: /`). They remain fully usable for the browser's
 second-family request and for API clients.
@@ -150,8 +153,9 @@ the Google account that will own the property.
    placeholder and a deploy, so DNS is simpler.
 5. Open **Sitemaps** and submit `https://ip.privacylink.nl/sitemap.xml`.
 6. Open **URL Inspection**, enter `https://ip.privacylink.nl/`, and use
-   **Request indexing**. Repeat for `https://ip.privacylink.nl/api`.
-7. After a few days, check **Page indexing** for the two URLs. A new site can
+   **Request indexing**. Repeat for `https://ip.privacylink.nl/nl` and
+   `https://ip.privacylink.nl/api`.
+7. After a few days, check **Page indexing** for all three URLs. A new site can
    take days to weeks before the first impressions appear.
 8. Use **Performance → Search results** to see the actual queries that bring
    impressions. Optimize for those queries instead of guessing.
@@ -191,23 +195,28 @@ does not help.
 
 ### Dutch
 
-The most valuable Dutch queries are variants of "wat is mijn ip adres", "mijn ip
-adres" and "ip adres checken". The current page is English, so it is not a good
-match for those queries.
+The Dutch homepage at `https://ip.privacylink.nl/nl` targets queries such as
+"wat is mijn ip adres", "mijn ip adres" and "ip adres checken" with Dutch copy
+and the same server-rendered IP tool. Both homepages are in the sitemap, carry
+reciprocal `en`, `nl` and `x-default` alternates, and link to each other without
+JavaScript. The API documentation remains English and has no alternates.
 
-The recommended next step is a real Dutch page, not a machine-translated
-duplicate:
+The server always renders English at `/` and Dutch at `/nl`, independent of
+`Accept-Language`. With JavaScript and session storage available, the homepage
+at `/` redirects visitors whose preferred browser language is Dutch to `/nl`.
+An explicit language choice overrides browser detection for the current tab
+session. Only the chosen language is stored; no cookies are used.
 
-- canonical URL: `https://ip.privacylink.nl/nl` (or a Dutch keyword path)
-- `<html lang="nl">`
-- Dutch title, H1, description and body copy
-- reciprocal `hreflang` links between `/` and `/nl`
-- both URLs in the sitemap
-- a visible language switch that works without JavaScript
+Before releasing changes to the Dutch homepage, verify in a browser:
 
-Do not serve Dutch content at `/` based on the `Accept-Language` header. That
-creates one URL with different content and makes canonicalization harder. Use a
-stable URL per language.
+- With JavaScript on, the initial IP is visible, the other family is checked,
+  and copy feedback, retry labels and live announcements are in Dutch.
+- With JavaScript off, the initial IP remains visible and selectable, and the
+  Dutch no-script message is visible.
+- Both language links work; `/api` remains English.
+- At 320px, there is no horizontal scrolling and long IPv6 addresses wrap.
+- With a keyboard, the skip link, copy and retry buttons, and FAQ summaries
+  work. With a screen reader, the document language and live feedback are Dutch.
 
 ### Brand
 
@@ -223,16 +232,16 @@ Implemented now:
 - homepage with the primary query in the title and H1
 - explanatory sections and FAQ
 - API documentation page
+- Dutch homepage at `/nl`, with `hreflang` and translated UI strings
 
 Recommended next, in order:
 
-1. Dutch homepage at `/nl`, with `hreflang` and translated UI strings.
-2. One or two deep pages only if they answer a distinct intent, for example
+1. One or two deep pages only if they answer a distinct intent, for example
    "IPv4 vs IPv6" or "public vs private IP address". Do not create thin
    near-duplicates of the homepage.
-3. A short "about the project" page or an expanded privacy page, linked from the
+2. A short "about the project" page or an expanded privacy page, linked from the
    homepage. This supports trust and gives other sites something to cite.
-4. Keep the API documentation current. Developer queries are lower volume but
+3. Keep the API documentation current. Developer queries are lower volume but
    highly qualified and easier to win than consumer head terms.
 
 ## Authority and links

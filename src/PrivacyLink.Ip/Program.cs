@@ -103,7 +103,7 @@ if (configuration.GetValue("Https:Redirect", true) && hasTrustedProxyConfigurati
     });
 }
 
-// /index.html and /api.html are aliases for the rendered endpoints. Redirect
+// HTML template paths and trailing-slash aliases are not canonical. Redirect
 // them permanently so search engines see one canonical URL per page instead of
 // duplicate HTML at several paths. The v4/v6 API hostnames redirect the
 // homepage and documentation to the main hostname.
@@ -118,6 +118,12 @@ app.Use((context, next) =>
         return Task.CompletedTask;
     }
 
+    if (context.Request.Path == "/index.nl.html" || context.Request.Path == "/nl/")
+    {
+        RedirectPermanent(context, onFamilyHost ? $"https://{hosts.Main}/nl" : "/nl");
+        return Task.CompletedTask;
+    }
+
     if (context.Request.Path == "/api.html" || context.Request.Path == "/api/")
     {
         RedirectPermanent(context, onFamilyHost ? $"https://{hosts.Main}/api" : "/api");
@@ -127,13 +133,14 @@ app.Use((context, next) =>
     return next();
 });
 
-var webRoot = Path.Combine(app.Environment.ContentRootPath, "Web");
-if (Directory.Exists(webRoot))
+var assetRoot = Path.Combine(app.Environment.ContentRootPath, "Web", "assets");
+if (Directory.Exists(assetRoot))
 {
-    var webProvider = new PhysicalFileProvider(webRoot);
+    var assetProvider = new PhysicalFileProvider(assetRoot);
     app.UseStaticFiles(new StaticFileOptions
     {
-        FileProvider = webProvider,
+        FileProvider = assetProvider,
+        RequestPath = "/assets",
         OnPrepareResponse = staticFileContext =>
         {
             var context = staticFileContext.Context;
@@ -167,6 +174,8 @@ app.MapMethods("/api.html", ["GET", "HEAD"], HandleApiDocs);
 app.MapMethods("/", ["GET", "HEAD"], HandleHomepage);
 
 app.MapMethods("/index.html", ["GET", "HEAD"], HandleHomepage);
+
+app.MapMethods("/nl", ["GET", "HEAD"], HandleDutchHomepage);
 
 app.Run();
 
@@ -233,6 +242,7 @@ async Task HandleSitemap(HttpContext context)
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
         "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n" +
         $"  <url><loc>https://{mainHost}/</loc></url>\n" +
+        $"  <url><loc>https://{mainHost}/nl</loc></url>\n" +
         $"  <url><loc>https://{mainHost}/api</loc></url>\n" +
         "</urlset>\n";
 
@@ -344,7 +354,11 @@ async Task HandleApiDocs(HttpContext context)
     }
 }
 
-async Task HandleHomepage(HttpContext context)
+Task HandleHomepage(HttpContext context) => HandleHomepageAsync(context, "index.html", "/");
+
+Task HandleDutchHomepage(HttpContext context) => HandleHomepageAsync(context, "index.nl.html", "/nl");
+
+async Task HandleHomepageAsync(HttpContext context, string templateFile, string canonicalPath)
 {
     var hostKind = hosts.Classify(context.Request.Host.Host);
     if (hostKind == HostKind.Unknown)
@@ -357,7 +371,7 @@ async Task HandleHomepage(HttpContext context)
     // part of the API, not separate search destinations.
     if (hostKind is HostKind.V4 or HostKind.V6)
     {
-        RedirectPermanent(context, $"https://{hosts.Main}/");
+        RedirectPermanent(context, $"https://{hosts.Main}{canonicalPath}");
         return;
     }
 
@@ -379,7 +393,7 @@ async Task HandleHomepage(HttpContext context)
         return;
     }
 
-    var templatePath = Path.Combine(app.Environment.ContentRootPath, "Web", "index.html");
+    var templatePath = Path.Combine(app.Environment.ContentRootPath, "Web", templateFile);
     if (!File.Exists(templatePath))
     {
         app.Logger.LogWarning("Homepage template is missing");

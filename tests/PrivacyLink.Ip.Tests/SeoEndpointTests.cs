@@ -24,6 +24,7 @@ public sealed class SeoEndpointTests
         Assert.Contains("User-agent: *", body);
         Assert.Contains("Allow: /", body);
         Assert.Contains("Disallow: /healthz", body);
+        Assert.DoesNotContain("Disallow: /nl", body);
         Assert.Contains($"Sitemap: https://{MainHost}/sitemap.xml", body);
         Assert.DoesNotContain("Disallow: /\n", body);
     }
@@ -58,6 +59,7 @@ public sealed class SeoEndpointTests
         Assert.Equal("application/xml; charset=utf-8", response.Content.Headers.ContentType?.ToString());
         Assert.Equal("public, max-age=3600", response.Headers.CacheControl?.ToString());
         Assert.Contains("<loc>https://ip.privacylink.nl/</loc>", body);
+        Assert.Contains("<loc>https://ip.privacylink.nl/nl</loc>", body);
         Assert.Contains("<loc>https://ip.privacylink.nl/api</loc>", body);
         Assert.DoesNotContain(V4Host, body);
         Assert.DoesNotContain(V6Host, body);

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wat is mijn IP-adres? Bekijk IPv4 en IPv6</title>
+  <meta name="description" content="Wat is mijn IP-adres? Bekijk direct je publieke IPv4- en IPv6-adres. Kopieer het met één klik. Geen advertenties, geen tracking, niets opgeslagen.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://{{MAIN_HOST}}/nl">
+  <link rel="alternate" hreflang="en" href="https://{{MAIN_HOST}}/">
+  <link rel="alternate" hreflang="nl" href="https://{{MAIN_HOST}}/nl">
+  <link rel="alternate" hreflang="x-default" href="https://{{MAIN_HOST}}/">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PrivacyLink IP">
+  <meta property="og:title" content="Wat is mijn IP-adres? Bekijk IPv4 en IPv6">
+  <meta property="og:description" content="Bekijk direct je publieke IPv4- en IPv6-adres. Kopieer het met één klik. Geen advertenties, geen tracking, niets opgeslagen.">
+  <meta property="og:url" content="https://{{MAIN_HOST}}/nl">
+  <meta property="og:locale" content="nl_NL">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Wat is mijn IP-adres? Bekijk IPv4 en IPv6">
+  <meta name="twitter:description" content="Bekijk direct je publieke IPv4- en IPv6-adres. Geen advertenties, geen tracking, niets opgeslagen.">
+  <link rel="stylesheet" href="{{ASSET_CSS_URL}}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://{{MAIN_HOST}}/nl#website",
+        "url": "https://{{MAIN_HOST}}/nl",
+        "name": "PrivacyLink IP",
+        "alternateName": "PrivacyLink IP-adreschecker",
+        "description": "Een snelle, advertentievrije checker voor je publieke IPv4- en IPv6-adres.",
+        "inLanguage": "nl"
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://{{MAIN_HOST}}/nl#webapp",
+        "name": "PrivacyLink IP",
+        "url": "https://{{MAIN_HOST}}/nl",
+        "description": "Toont het publieke IPv4- en IPv6-adres dat deze server voor je verbinding ziet. Geen advertenties, geen tracking, niets opgeslagen.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any",
+        "inLanguage": "nl",
+        "browserRequirements": "Een moderne browser. Het eerste adres wordt door de server weergegeven; JavaScript voegt de tweede adresfamilie en de kopieerknoppen toe.",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        },
+        "featureList": [
+          "Publiek IPv4-adres tonen",
+          "Publiek IPv6-adres tonen",
+          "Een adres met één klik kopiëren",
+          "API met platte tekst en JSON"
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://{{MAIN_HOST}}/nl#webpage",
+        "url": "https://{{MAIN_HOST}}/nl",
+        "name": "Wat is mijn IP-adres? Bekijk IPv4 en IPv6",
+        "isPartOf": {
+          "@id": "https://{{MAIN_HOST}}/nl#website"
+        },
+        "about": {
+          "@id": "https://{{MAIN_HOST}}/nl#webapp"
+        },
+        "inLanguage": "nl"
+      }
+    ]
+  }
+  </script>
+  <script type="application/json" id="ip-server-state">{{SERVER_STATE}}</script>
+  <script src="{{ASSET_JS_URL}}" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Naar de inhoud</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/nl">
+        <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" aria-hidden="true" focusable="false">
+          <g transform="rotate(-45 20 20)" stroke-width="3.5">
+            <rect x="3.5" y="14" width="20" height="12" rx="6" stroke="#16333A"></rect>
+            <rect x="16.5" y="14" width="20" height="12" rx="6" stroke="#4A9B8D"></rect>
+          </g>
+        </svg>
+        <span class="brand-name">PrivacyLink<span class="brand-suffix"> IP</span></span>
+      </a>
+      <p class="claim"><span class="claim-dot" aria-hidden="true"></span>Geen advertenties. Geen tracking.</p>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Publiek IP-adres</p>
+      <h1 id="page-title">Wat is mijn IP-adres?</h1>
+      <p class="hero-sub">Bekijk de publieke IPv4- en IPv6-adressen die deze server voor je verbinding ziet. Kopieer er één — geen advertenties, geen tracking, niets opgeslagen.</p>
+    </section>
+    <div class="hero-rule" aria-hidden="true"></div>
+
+    <div class="ip-stack">
+      <section class="ip-row" data-family="4" data-status="unknown" aria-labelledby="ipv4-label">
+        <div class="ip-row__head">
+          <h2 class="ip-row__label" id="ipv4-label">01 · Jouw publieke IPv4</h2>
+        </div>
+        <div class="ip-row__body">
+          <output id="ipv4-value" class="ip-value" aria-live="off">{{INITIAL_IPV4}}</output>
+          <div class="ip-row__actions">
+            <button type="button" class="btn" id="ipv4-copy" aria-label="IPv4-adres kopiëren" disabled>
+              <svg class="btn__icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+                <rect x="5.6" y="2.7" width="7.7" height="7.7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"></rect>
+                <rect x="2.7" y="5.6" width="7.7" height="7.7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"></rect>
+              </svg>
+              <span class="btn__label">Kopiëren</span>
+            </button>
+          </div>
+        </div>
+        <p class="ip-row__note" id="ipv4-note" hidden></p>
+      </section>
+
+      <section class="ip-row" data-family="6" data-status="unknown" aria-labelledby="ipv6-label">
+        <div class="ip-row__head">
+          <h2 class="ip-row__label" id="ipv6-label">02 · Jouw publieke IPv6</h2>
+        </div>
+        <div class="ip-row__body">
+          <output id="ipv6-value" class="ip-value" aria-live="off">{{INITIAL_IPV6}}</output>
+          <div class="ip-row__actions">
+            <button type="button" class="btn" id="ipv6-copy" aria-label="IPv6-adres kopiëren" disabled>
+              <svg class="btn__icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+                <rect x="5.6" y="2.7" width="7.7" height="7.7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"></rect>
+                <rect x="2.7" y="5.6" width="7.7" height="7.7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"></rect>
+              </svg>
+              <span class="btn__label">Kopiëren</span>
+            </button>
+            <button type="button" class="btn btn--ghost" id="ipv6-retry" aria-label="IPv6-detectie opnieuw proberen" hidden>
+              <svg class="btn__icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+                <path d="M13.2 8a5.2 5.2 0 1 1-1.7-3.9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+                <path d="M13.4 2.6v2.7h-2.7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <span class="btn__label">Opnieuw proberen</span>
+            </button>
+          </div>
+        </div>
+        <p class="ip-row__note" id="ipv6-note" hidden></p>
+      </section>
+    </div>
+
+    <p class="connection" id="connection" data-state="wait">
+      <span class="connection__dot" aria-hidden="true"></span>
+      <span id="connection-text">Verbinding: het andere adres wordt gecontroleerd…</span>
+    </p>
+
+    <noscript>
+      <p class="noscript-note">JavaScript staat uit. Het adres hierboven is door de server weergegeven en blijft leesbaar. Automatische detectie van het andere adres, de verbindingsregel en de kopieerknoppen hebben JavaScript nodig — selecteer een adres met je muis of toetsenbord om het te kopiëren.</p>
+    </noscript>
+
+    <div class="details">
+      <section class="block" id="about" aria-labelledby="about-title">
+        <h2 id="about-title">Over deze IP-checker</h2>
+        <p>PrivacyLink IP is een kleine, onafhankelijke opensource-tool met één taak: de publieke IP-adressen tonen die deze server voor jouw verbinding ziet. Geen advertenties, geen account, geen analytics en geen geschiedenis van wie er verbinding maakte.</p>
+        <p>Beide adresfamilies krijgen een eigen rij en een eigen knop om te kopiëren. Het adres van de verbinding waarmee deze pagina is geladen, staat al in de pagina zelf en is dus zichtbaar voordat er ook maar een script draait.</p>
+      </section>
+
+      <section class="block" id="what-is-an-ip" aria-labelledby="what-title">
+        <h2 id="what-title">Wat is een IP-adres?</h2>
+        <p>Een IP-adres is het nummer dat een netwerk gebruikt om verkeer van en naar je verbinding te sturen. Op het publieke internet draagt elke aanvraag het adres van de verbinding die hem verstuurt; daarom kan deze pagina het aan je tonen. Het is niet je naam, je account of je exacte locatie.</p>
+        <p>Je apparaat heeft ook een privé-adres binnen je thuisnetwerk of op je werk, bijvoorbeeld <code>192.168.1.20</code>. Websites zien dat privé-adres niet: je router vertaalt het naar het publieke adres hierboven.</p>
+      </section>
+
+      <section class="block" id="ipv4-vs-ipv6" aria-labelledby="families-title">
+        <h2 id="families-title">IPv4 en IPv6: wat is het verschil?</h2>
+        <p>IPv4-adressen bestaan uit vier getallen met punten ertussen, zoals <code>203.0.113.42</code>. IPv6-adressen zijn langer en gebruiken hexadecimale groepen met dubbele punten, zoals <code>2001:db8::1</code>. IPv6 bestaat omdat de voorraad IPv4-adressen op is.</p>
+        <p>Veel verbindingen ondersteunen beide families. Een website ziet alleen de familie die de verbinding gebruikte, dus deze pagina controleert de andere familie met één extra aanvraag. Mislukt die controle, dan bewijst dat niet dat je internetaanbieder geen IPv6 heeft — een VPN, firewall of proxy kan het blokkeren.</p>
+      </section>
+
+      <section class="block" id="public-vs-private" aria-labelledby="public-private-title">
+        <h2 id="public-private-title">Publiek en privé-IP-adres</h2>
+        <p>Het adres dat je hier ziet is publiek: zo verschijnt je verbinding op internet. Een privé-adres, zoals <code>10.0.0.5</code> of <code>192.168.1.20</code>, werkt alleen binnen je eigen netwerk. Je router gebruikt NAT om één publiek adres met meerdere apparaten te delen.</p>
+        <p>Op mobiele netwerken kan carrier-grade NAT (CGNAT) veel klanten achter één publiek adres zetten. Het adres dat je dan ziet, hoort bij de gateway van de provider en niet bij jouw telefoon alleen.</p>
+      </section>
+
+      <section class="block" id="why-change" aria-labelledby="change-title">
+        <h2 id="change-title">Waarom verandert mijn IP-adres?</h2>
+        <p>De meeste thuisverbindingen gebruiken een dynamisch adres dat de internetaanbieder kan wijzigen na een herstart van de router, het verlopen van een lease of onderhoud aan het netwerk. Ook een VPN, proxy of de wissel tussen wifi en mobiele data verandert het adres dat een website ziet.</p>
+        <p>IPv6-privacy-extensies kunnen het adres vaker laten rouleren. Elk bezoek aan deze pagina is een momentopname van de verbinding op dat moment, geen blijvende identificatie.</p>
+      </section>
+
+      <section class="block" id="hide-ip" aria-labelledby="hide-title">
+        <h2 id="hide-title">Hoe kan ik mijn IP-adres verbergen?</h2>
+        <p>Een VPN stuurt je verkeer via een server, en websites zien het adres van die server in plaats van het jouwe. Een proxy werkt vergelijkbaar, vaak voor één toepassing. Tor voegt meer lagen toe, ten koste van snelheid.</p>
+        <p>Je adres verbergen maakt je niet anoniem: cookies, browser fingerprints en accounts waarop je bent ingelogd kunnen je alsnog identificeren. Deze pagina gebruikt ze niet, andere sites kunnen dat wel doen.</p>
+      </section>
+
+      <section class="block" id="api" aria-labelledby="api-title">
+        <h2 id="api-title">API</h2>
+        <p>Hetzelfde antwoord zonder browser: platte tekst of JSON, geen cookies, geen sleutel.</p>
+        <pre class="snippet"><code>curl -sS https://{{MAIN_HOST}}/api/ip</code></pre>
+        <p>Deze hostname antwoordt met de adresfamilie van je verbinding. Voor alleen IPv4 gebruik je <code>https://{{V4_HOST}}/api/ip</code>; voor alleen IPv6 gebruik je <code>https://{{V6_HOST}}/api/ip</code>.</p>
+        <p class="block-link"><a href="/api">Volledige API-documentatie <span aria-hidden="true">→</span></a></p>
+      </section>
+    </div>
+
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Veelgestelde vragen</h2>
+
+      <details>
+        <summary>Wat is mijn IP-adres?</summary>
+        <p>Het is het publieke adres bovenaan deze pagina: het adres dat deze server ziet voor de verbinding waarmee de pagina is geladen. Gebruik je een VPN, proxy of CGNAT, dan zie je het adres van die gateway. Het privé-adres van je apparaat, zoals <code>192.168.1.20</code>, is niet zichtbaar voor websites.</p>
+      </details>
+
+      <details>
+        <summary>Waarom laten IPv4 en IPv6 verschillende resultaten zien?</summary>
+        <p>Het zijn twee aparte adresfamilies die verschillende routes kunnen nemen. Een verbinding kan alleen IPv4 hebben, alleen IPv6 of beide. IPv6-privacy-extensies kunnen het adres bovendien tussen aanvragen laten rouleren, waardoor de waarde een momentopname is en geen vaste identiteit.</p>
+      </details>
+
+      <details>
+        <summary>Is mijn IP-adres een persoonsgegeven?</summary>
+        <p>Onder de AVG kan een IP-adres een persoonsgegeven zijn als het aan een persoon te koppelen is, bijvoorbeeld via de administratie van een provider. Deze dienst legt die koppeling niet: er wordt geen geschiedenis van bezoekersadressen bewaard, geen cookies geplaatst en geen analytics gebruikt.</p>
+      </details>
+
+      <details>
+        <summary>Kan iemand mijn huis vinden met mijn IP-adres?</summary>
+        <p>Niet het exacte adres. Een IP-adres kan een ruwe locatieschatting ondersteunen, meestal een land of regio en soms een stad, maar het bevat niet je straat, naam of telefoonnummer. Alleen je internetaanbieder kan het adres aan een abonnee koppelen.</p>
+      </details>
+
+      <details>
+        <summary>Slaat deze site mijn IP-adres op?</summary>
+        <p>Nee. Het adres wordt gebruikt om de aanvraag te beantwoorden en komt niet in applicatielogs of een database terecht. De pagina gebruikt geen cookies, geen analytics en geen scripts van derden. Je internetaanbieder en de hostinginfrastructuur kunnen wel verbindingsgegevens verwerken.</p>
+      </details>
+
+      <details>
+        <summary>Hoe controleer ik mijn IP-adres met curl?</summary>
+        <p>Voer <code>curl -sS https://{{MAIN_HOST}}/api/ip</code> uit voor platte tekst, of gebruik <code>/api/ip.json</code> voor JSON. De hostnamen met <code>v4.</code> en <code>v6.</code> dwingen één adresfamilie af. Je hebt geen sleutel of account nodig.</p>
+      </details>
+
+      <details>
+        <summary>Waarom staat er bij IPv6 "niet bereikbaar"?</summary>
+        <p>De browser kon de hostname die alleen IPv6 gebruikt niet bereiken. Dat kan op een verbinding met alleen IPv4, maar ook door een VPN, firewall, DNS64 of browserbeleid. Een mislukte controle bewijst niet dat je internetaanbieder geen IPv6 heeft.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <nav class="footer-nav" aria-label="Navigatie">
+        <a href="#faq">FAQ</a>
+        <a href="/api">API</a>
+        <a href="https://github.com/janouwehand/privacylink-ip" rel="noopener noreferrer" target="_blank">GitHub<span class="sr-only"> (opent in een nieuw tabblad)</span></a>
+        <a href="/" hreflang="en" lang="en">English</a>
+      </nav>
+      <p class="footer-note">PrivacyLink IP · geen advertenties, geen tracking</p>
+    </div>
+  </footer>
+
+  <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

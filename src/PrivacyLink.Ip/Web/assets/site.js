@@ -15,11 +15,79 @@
   var TIMEOUT_MS = 3000;
   var COPY_RESET_MS = 1800;
 
-  var RESULT_TEXT = {
-    timeout: "check timed out",
-    unavailable: "not reachable from this browser",
-    error: "check failed"
+  /* User-facing copy, keyed by the document language. The English table is the
+   * fallback, so a missing or unsupported lang attribute keeps the English
+   * output. {family}, {ipv4} and {ipv6} are replaced by t(). */
+  var STRINGS = {
+    en: {
+      copy: "Copy",
+      copied: "Copied",
+      copyFailed: "Copy failed",
+      copyAria: "Copy {family} address",
+      noteLoading: "Checking for an {family} address\u2026",
+      noteTimeout: "No answer within 3 seconds. A firewall, proxy or VPN may be blocking this check.",
+      noteUnavailable: "Not reachable from this browser. That does not prove your connection lacks {family} \u2014 a VPN, firewall or proxy can cause it.",
+      noteError: "The {family} check could not be completed. Try again in a moment.",
+      serverStateError: "This page could not read the address the server sent. Reload the page to try again.",
+      announceAvailable: "{family} address found.",
+      announceTimeout: "{family} check timed out.",
+      announceUnavailable: "{family} not reachable from this browser.",
+      announceError: "{family} check failed.",
+      announceCopied: "{family} address copied.",
+      announceCopyFailed: "Copy failed. The address is selected, so you can copy it with your keyboard.",
+      announceExampleCopied: "Example copied.",
+      announceExampleCopyFailed: "Copy failed. The example is selected, so you can copy it with your keyboard.",
+      connectionBoth: "Connection: IPv4 + IPv6 available",
+      connection: "Connection: {ipv4} \u00B7 {ipv6}",
+      phraseAvailable: "{family} available",
+      phraseLoading: "checking {family}\u2026",
+      phraseTimeout: "{family} timed out",
+      phraseUnavailable: "{family} not reachable",
+      phraseError: "{family} check failed"
+    },
+    nl: {
+      copy: "Kopiëren",
+      copied: "Gekopieerd",
+      copyFailed: "Kopiëren mislukt",
+      copyAria: "{family}-adres kopiëren",
+      noteLoading: "Controleren op een {family}-adres\u2026",
+      noteTimeout: "Geen antwoord binnen 3 seconden. Een firewall, proxy of VPN kan deze controle blokkeren.",
+      noteUnavailable: "Niet bereikbaar vanuit deze browser. Dat bewijst niet dat je verbinding geen {family} heeft \u2014 een VPN, firewall of proxy kan de oorzaak zijn.",
+      noteError: "De {family}-controle kon niet worden voltooid. Probeer het zo meteen opnieuw.",
+      serverStateError: "Deze pagina kon het adres dat de server stuurde niet lezen. Herlaad de pagina om het opnieuw te proberen.",
+      announceAvailable: "{family}-adres gevonden.",
+      announceTimeout: "{family}-controle verlopen.",
+      announceUnavailable: "{family} niet bereikbaar vanuit deze browser.",
+      announceError: "{family}-controle mislukt.",
+      announceCopied: "{family}-adres gekopieerd.",
+      announceCopyFailed: "Kopiëren mislukt. Het adres is geselecteerd, zodat je het met je toetsenbord kunt kopiëren.",
+      announceExampleCopied: "Voorbeeld gekopieerd.",
+      announceExampleCopyFailed: "Kopiëren mislukt. Het voorbeeld is geselecteerd, zodat je het met je toetsenbord kunt kopiëren.",
+      connectionBoth: "Verbinding: IPv4 + IPv6 beschikbaar",
+      connection: "Verbinding: {ipv4} \u00B7 {ipv6}",
+      phraseAvailable: "{family} beschikbaar",
+      phraseLoading: "{family} controleren\u2026",
+      phraseTimeout: "{family}-controle verlopen",
+      phraseUnavailable: "{family} niet bereikbaar",
+      phraseError: "{family}-controle mislukt"
+    }
   };
+
+  var strings = STRINGS[document.documentElement.lang] || STRINGS.en;
+
+  /* Looks up a string-table entry and fills in its {placeholders}. */
+  function t(entryKey, values) {
+    var text = strings[entryKey];
+    if (typeof text !== "string") {
+      text = STRINGS.en[entryKey];
+    }
+    if (typeof text !== "string") {
+      return "";
+    }
+    return text.replace(/\{(\w+)\}/g, function (match, name) {
+      return values && Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
+    });
+  }
 
   var state = {
     4: { status: "loading", ip: "", note: "" },
@@ -137,14 +205,13 @@
     var name = label(family);
     switch (entry.status) {
       case "loading":
-        return "Checking for an " + name + " address\u2026";
+        return t("noteLoading", { family: name });
       case "timeout":
-        return "No answer within 3 seconds. A firewall, proxy or VPN may be blocking this check.";
+        return t("noteTimeout");
       case "unavailable":
-        return "Not reachable from this browser. That does not prove your connection lacks " +
-          name + " \u2014 a VPN, firewall or proxy can cause it.";
+        return t("noteUnavailable", { family: name });
       case "error":
-        return "The " + name + " check could not be completed. Try again in a moment.";
+        return t("noteError", { family: name });
       default:
         return "";
     }
@@ -181,7 +248,7 @@
     if (el.copy) {
       if (entry.ip) {
         el.copy.disabled = false;
-        el.copy.setAttribute("aria-label", "Copy " + label(family) + " address");
+        el.copy.setAttribute("aria-label", t("copyAria", { family: label(family) }));
       } else {
         el.copy.disabled = true;
       }
@@ -201,15 +268,15 @@
     var name = label(family);
     switch (entry.status) {
       case "available":
-        return name + " available";
+        return t("phraseAvailable", { family: name });
       case "loading":
-        return "checking " + name + "\u2026";
+        return t("phraseLoading", { family: name });
       case "timeout":
-        return name + " timed out";
+        return t("phraseTimeout", { family: name });
       case "unavailable":
-        return name + " not reachable";
+        return t("phraseUnavailable", { family: name });
       default:
-        return name + " check failed";
+        return t("phraseError", { family: name });
     }
   }
 
@@ -223,8 +290,8 @@
     var both = state[4].status === "available" && state[6].status === "available";
     var busy = state[4].status === "loading" || state[6].status === "loading";
     var message = both
-      ? "Connection: IPv4 + IPv6 available"
-      : "Connection: " + phrase(4) + " \u00B7 " + phrase(6);
+      ? t("connectionBoth")
+      : t("connection", { ipv4: phrase(4), ipv6: phrase(6) });
 
     if (text.textContent !== message) {
       text.textContent = message;
@@ -287,20 +354,20 @@
     copyText(entry.ip).then(function () {
       window.clearTimeout(copyTimers[family]);
       el.copy.classList.add("is-copied");
-      setCopyLabel(el.copy, "Copied");
+      setCopyLabel(el.copy, t("copied"));
       copyTimers[family] = window.setTimeout(function () {
         el.copy.classList.remove("is-copied");
-        setCopyLabel(el.copy, "Copy");
+        setCopyLabel(el.copy, t("copy"));
       }, COPY_RESET_MS);
-      announce(label(family) + " address copied.");
+      announce(t("announceCopied", { family: label(family) }));
     }).catch(function () {
       window.clearTimeout(copyTimers[family]);
-      setCopyLabel(el.copy, "Copy failed");
+      setCopyLabel(el.copy, t("copyFailed"));
       copyTimers[family] = window.setTimeout(function () {
-        setCopyLabel(el.copy, "Copy");
+        setCopyLabel(el.copy, t("copy"));
       }, COPY_RESET_MS + 700);
       selectValue(el.value);
-      announce("Copy failed. The address is selected, so you can copy it with your keyboard.");
+      announce(t("announceCopyFailed"));
     });
   }
 
@@ -363,7 +430,19 @@
       entry.note = "";
       render(family);
       renderConnection();
-      announce(label(family) + " " + RESULT_TEXT[status] + ".");
+
+      var message;
+      switch (status) {
+        case "timeout":
+          message = t("announceTimeout", { family: label(family) });
+          break;
+        case "unavailable":
+          message = t("announceUnavailable", { family: label(family) });
+          break;
+        default:
+          message = t("announceError", { family: label(family) });
+      }
+      announce(message);
     }
 
     if (typeof window.fetch !== "function") {
@@ -410,7 +489,7 @@
       entry.note = "";
       render(family);
       renderConnection();
-      announce(label(family) + " address found.");
+      announce(t("announceAvailable", { family: label(family) }));
     }).catch(function (error) {
       if (timedOut || (error && error.name === "AbortError")) {
         fail("timeout");
@@ -596,26 +675,65 @@
         copyText(value).then(function () {
           window.clearTimeout(timer);
           button.classList.add("is-copied");
-          setCopyLabel(button, "Copied");
+          setCopyLabel(button, t("copied"));
           timer = window.setTimeout(function () {
             button.classList.remove("is-copied");
-            setCopyLabel(button, "Copy");
+            setCopyLabel(button, t("copy"));
           }, COPY_RESET_MS);
-          announce("Example copied.");
+          announce(t("announceExampleCopied"));
         }).catch(function () {
           window.clearTimeout(timer);
-          setCopyLabel(button, "Copy failed");
+          setCopyLabel(button, t("copyFailed"));
           timer = window.setTimeout(function () {
-            setCopyLabel(button, "Copy");
+            setCopyLabel(button, t("copy"));
           }, COPY_RESET_MS + 700);
           selectValue(target);
-          announce("Copy failed. The example is selected, so you can copy it with your keyboard.");
+          announce(t("announceExampleCopyFailed"));
         });
       });
     });
   }
 
+  function initHomepageLanguage() {
+    var path = window.location.pathname;
+    if (path !== "/" && path !== "/nl") {
+      return false;
+    }
+
+    var key = "privacylink-homepage-language";
+    var preferred;
+    try {
+      preferred = window.sessionStorage.getItem(key);
+    } catch (_) {
+      /* Keep both pages usable when browser storage is disabled. */
+      return false;
+    }
+
+    var switchLink = document.querySelector(".footer-nav a[hreflang]");
+    if (switchLink) {
+      switchLink.addEventListener("click", function () {
+        try {
+          window.sessionStorage.setItem(key, switchLink.hreflang);
+        } catch (_) {
+          /* Leave normal link navigation intact. */
+        }
+      });
+    }
+
+    var browserLanguage = window.navigator.language || "";
+    if (path === "/" && (preferred === "nl" || (!preferred && /^nl(?:-|$)/i.test(browserLanguage)))) {
+      window.location.replace("/nl" + window.location.search + window.location.hash);
+      return true;
+    }
+
+    return false;
+  }
+
   function init() {
+    if (initHomepageLanguage()) {
+      return;
+    }
+
     announcer = document.getElementById("announcer");
 
     initTabs();
@@ -653,12 +771,12 @@
       state[4] = {
         status: "error",
         ip: "",
-        note: "This page could not read the address the server sent. Reload the page to try again."
+        note: t("serverStateError")
       };
       state[6] = {
         status: "error",
         ip: "",
-        note: "This page could not read the address the server sent. Reload the page to try again."
+        note: t("serverStateError")
       };
       render(4);
       render(6);
