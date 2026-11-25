@@ -103,16 +103,11 @@ if (configuration.GetValue("Https:Redirect", true) && hasTrustedProxyConfigurati
     });
 }
 
-// /index.html is rendered by the homepage endpoint (placeholders must be
-// replaced), never served as a raw static file. /api.html is rewritten to the
-// API documentation endpoint for the same reason.
+// /api.html is rewritten to the API documentation endpoint; templates are
+// never exposed as static files.
 app.Use((context, next) =>
 {
-    if (context.Request.Path == "/index.html")
-    {
-        context.Request.Path = "/";
-    }
-    else if (context.Request.Path == "/api.html")
+    if (context.Request.Path == "/api.html")
     {
         context.Request.Path = "/api";
     }
@@ -120,13 +115,14 @@ app.Use((context, next) =>
     return next();
 });
 
-var webRoot = Path.Combine(app.Environment.ContentRootPath, "Web");
+var webRoot = Path.Combine(app.Environment.ContentRootPath, "Web", "assets");
 if (Directory.Exists(webRoot))
 {
     var webProvider = new PhysicalFileProvider(webRoot);
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = webProvider,
+        RequestPath = "/assets",
         OnPrepareResponse = staticFileContext =>
         {
             var context = staticFileContext.Context;
@@ -153,9 +149,13 @@ app.MapMethods("/api", ["GET", "HEAD"], HandleApiDocs);
 
 app.MapMethods("/api.html", ["GET", "HEAD"], HandleApiDocs);
 
-app.MapMethods("/", ["GET", "HEAD"], HandleHomepage);
+app.MapMethods("/", ["GET", "HEAD"], HandleLanguageRedirect);
 
 app.MapMethods("/index.html", ["GET", "HEAD"], HandleHomepage);
+app.MapMethods("/en/", ["GET", "HEAD"], HandleHomepage);
+app.MapMethods("/nl/", ["GET", "HEAD"], HandleHomepage);
+app.MapMethods("/robots.txt", ["GET", "HEAD"], HandleRobots);
+app.MapMethods("/sitemap.xml", ["GET", "HEAD"], HandleSitemap);
 
 app.Run();
 
@@ -199,6 +199,7 @@ Task HandleIpJson(HttpContext context) => HandleIpAsync(context, json: true);
 
 async Task HandleIpAsync(HttpContext context, bool json)
 {
+    context.Response.Headers["X-Robots-Tag"] = "noindex";
     var hostKind = hosts.Classify(context.Request.Host.Host);
     if (hostKind == HostKind.Unknown)
     {
@@ -309,7 +310,8 @@ async Task HandleHomepage(HttpContext context)
         return;
     }
 
-    var templatePath = Path.Combine(app.Environment.ContentRootPath, "Web", "index.html");
+    var language = context.Request.Path.StartsWithSegments("/nl") ? "nl" : "en";
+    var templatePath = Path.Combine(app.Environment.ContentRootPath, "Web", language == "nl" ? "index.nl.html" : "index.html");
     if (!File.Exists(templatePath))
     {
         app.Logger.LogWarning("Homepage template is missing");
@@ -319,7 +321,9 @@ async Task HandleHomepage(HttpContext context)
 
     var template = await File.ReadAllTextAsync(templatePath, context.RequestAborted);
     var model = new IpState(address.ToString(), version, version == 4 ? 6 : 4);
-    var html = renderer.RenderHtml(template, model, assets);
+    var html = renderer.RenderHtml(template, model, assets)
+        .Replace("{{MAIN_HOST}}", System.Text.Encodings.Web.HtmlEncoder.Default.Encode(hosts.Main), StringComparison.Ordinal)
+        .Replace("{{LANG}}", language, StringComparison.Ordinal);
 
     context.Response.StatusCode = StatusCodes.Status200OK;
     context.Response.ContentType = "text/html; charset=utf-8";
@@ -329,6 +333,42 @@ async Task HandleHomepage(HttpContext context)
     {
         await context.Response.WriteAsync(html, context.RequestAborted);
     }
+}
+
+void HandleLanguageRedirect(HttpContext context)
+{
+    var bestLanguage = "en";
+    var bestQuality = 0.0;
+    foreach (var item in context.Request.GetTypedHeaders().AcceptLanguage ?? [])
+    {
+        var primary = item.Value.Value?.Split('-')[0];
+        var quality = item.Quality ?? 1;
+        if (quality > bestQuality && (string.Equals(primary, "en", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(primary, "nl", StringComparison.OrdinalIgnoreCase)))
+        {
+            bestLanguage = primary!.ToLowerInvariant();
+            bestQuality = quality;
+        }
+    }
+
+    NoStore(context);
+    context.Response.Headers.Vary = "Accept-Language";
+    context.Response.Redirect($"/{bestLanguage}/", permanent: false);
+}
+
+async Task HandleRobots(HttpContext context)
+{
+    context.Response.ContentType = "text/plain; charset=utf-8";
+    if (!HttpMethods.IsHead(context.Request.Method))
+        await context.Response.WriteAsync($"User-agent: *\nAllow: /\nSitemap: https://{hosts.Main}/sitemap.xml\n");
+}
+
+async Task HandleSitemap(HttpContext context)
+{
+    var host = System.Security.SecurityElement.Escape(hosts.Main);
+    context.Response.ContentType = "application/xml; charset=utf-8";
+    if (!HttpMethods.IsHead(context.Request.Method))
+        await context.Response.WriteAsync($"<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"><url><loc>https://{host}/en/</loc></url><url><loc>https://{host}/nl/</loc></url><url><loc>https://{host}/api</loc></url></urlset>");
 }
 
 void ApplyCors(HttpContext context, HostKind hostKind)

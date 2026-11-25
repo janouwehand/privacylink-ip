@@ -46,14 +46,17 @@ The pipeline order is security-relevant:
    no-referrer`, `Permissions-Policy`, CSP and HSTS (HTTPS only).
 4. **HTTPS redirect.** Outside Development, HTTP requests for allowed hostnames
    receive a `308` to HTTPS. Unknown hosts are never used as redirect targets.
-5. **Static files.** `Web/` is served from the content root. `/index.html` is
-   rewritten to `/` and `/api.html` to `/api` so the templates, not the raw
-   files with placeholders, are served. Assets under `/assets/` are referenced
+5. **Static files.** Assets under `/assets/` are served from `Web/assets/`.
+   HTML templates are rendered by endpoints, not served as static files.
+   Asset URLs are referenced
    with a content-hash query (`?v=...`). Only the current hash is cached as
    `public, max-age=31536000, immutable`; unversioned and stale URLs use
    `public, no-cache` and revalidate via `ETag`. Other static files also use
    `public, no-cache`.
-6. **Endpoints.** `/`, `/api`, `/api/ip`, `/api/ip.json`, `/healthz`.
+6. **Endpoints.** `/` negotiates the browser language and temporarily redirects
+   to `/en/` or `/nl/`. The fixed language routes serve HTML without negotiating
+   language. Other endpoints include `/api`, `/api/ip`, `/api/ip.json`,
+   `/healthz`, `/robots.txt` and `/sitemap.xml`.
 
 ## IP resolution and fail-closed behavior
 
@@ -85,8 +88,9 @@ API never returns a `200` with the wrong family.
 
 ## Server-side rendering
 
-The homepage is a static template read from `Web/index.html` at request time.
-`SiteRenderer.RenderHtml(template, IpState)` performs exactly three replacements:
+The homepage templates are read from `Web/index.html` (English) or
+`Web/index.nl.html` (Dutch) at request time. The renderer fills in the connection
+data, asset URLs and the main hostname for canonical and alternate URLs:
 
 | Placeholder | Value |
 | --- | --- |
@@ -95,6 +99,7 @@ The homepage is a static template read from `Web/index.html` at request time.
 | `{{SERVER_STATE}}` | JSON `{"initialIp":"...","initialVersion":4|6,"otherVersion":6|4}` |
 | `{{ASSET_CSS_URL}}` | Content-hashed URL of `/assets/site.css` |
 | `{{ASSET_JS_URL}}` | Content-hashed URL of `/assets/site.js` |
+| `{{MAIN_HOST}}` | Configured canonical hostname |
 
 The asset URLs come from `AssetManifest`, which hashes each file once at
 startup. Templates must always use the placeholders instead of hardcoding

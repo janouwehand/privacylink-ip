@@ -9,12 +9,27 @@ and/or IPv6 address that the server observes for the visitor's connection.
   the dedicated `v4.*` or `v6.*` hostname.
 - **No tracking:** no cookies, no analytics, no third-party browser requests, no
   database, and no permanent visitor-IP storage.
+- **Bilingual:** server-rendered English and Dutch pages, with browser language
+  detection on the entry URL and direct links to switch languages.
 - **Small and open:** ASP.NET Core Minimal API with a small vanilla frontend.
 
 This repository contains the backend, tests, deployment examples and
 documentation. The homepage stylesheet/script and HTML template live in
 `src/PrivacyLink.Ip/Web/` and are maintained separately; when they are absent
-the API still builds and runs, and `/` returns a neutral `404`.
+the API still builds and runs, and the affected language page returns a neutral
+`404`.
+
+## Languages and search
+
+`/` temporarily redirects to `/nl/` or `/en/` based on `Accept-Language`, with
+English as the fallback. Direct language URLs never negotiate the language.
+No cookie or browser storage is used for language selection.
+
+`/robots.txt` points to `/sitemap.xml`, which lists the two homepage URLs and the
+English API documentation. Canonical URLs use the configured main hostname
+(`Hosts:Main`); the dedicated IPv4 and IPv6 hosts remain available for their
+respective connection checks. After deployment, submit the sitemap and inspect
+both language URLs in Google Search Console.
 
 ## Stack
 

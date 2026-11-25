@@ -44,7 +44,7 @@ public sealed class HomepageTests
             using var factory = new PrivacyLinkAppFactory(contentRoot: root);
             using var client = factory.CreateAppClient();
 
-            using var response = await Requests.GetAsync(client, "/", "ip.privacylink.nl", "203.0.113.42");
+            using var response = await Requests.GetAsync(client, "/en/", "ip.privacylink.nl", "203.0.113.42");
             var html = await response.Content.ReadAsStringAsync();
 
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
@@ -97,7 +97,7 @@ public sealed class HomepageTests
             using var factory = new PrivacyLinkAppFactory(contentRoot: root);
             using var client = factory.CreateAppClient();
 
-            using var response = await Requests.GetAsync(client, "/", "ip.privacylink.nl", "10.0.0.5");
+            using var response = await Requests.GetAsync(client, "/en/", "ip.privacylink.nl", "10.0.0.5");
             var body = await response.Content.ReadAsStringAsync();
 
             Assert.Equal(System.Net.HttpStatusCode.ServiceUnavailable, response.StatusCode);
@@ -119,7 +119,7 @@ public sealed class HomepageTests
             using var factory = new PrivacyLinkAppFactory(contentRoot: root);
             using var client = factory.CreateAppClient();
 
-            using var response = await Requests.GetAsync(client, "/", "ip.privacylink.nl", "203.0.113.42");
+            using var response = await Requests.GetAsync(client, "/en/", "ip.privacylink.nl", "203.0.113.42");
 
             Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
             Assert.Equal("homepage_not_available\n", await response.Content.ReadAsStringAsync());
